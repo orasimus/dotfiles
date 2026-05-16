@@ -18,6 +18,7 @@
         name = "Otso Rasimus";
         email = "orasimus@gmail.com";
       };
+      core.editor = "hx";
       init.defaultBranch = "main";
     };
   };
