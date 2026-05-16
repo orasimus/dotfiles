@@ -109,6 +109,11 @@
     #media-session.enable = true;
   };
 
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
+
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
@@ -196,6 +201,8 @@
       };
     };
   };
+
+  programs.steam.enable = true;
 
   programs.fish.enable = true;
   users.users.otso = {
