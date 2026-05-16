@@ -103,6 +103,11 @@
     };
   };
 
+  programs.fish.enable = true;
+  users.users.otso = {
+    shell = pkgs.fish;
+  };
+
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 

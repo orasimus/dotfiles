@@ -26,4 +26,11 @@
   programs.firefox = {
     enable = true;
   };
+
+  programs.fish = {
+    enable = true;
+    shellAliases = {
+      asenna = "sudo nixos-rebuild switch --flake ~/.dotfiles#markeeg";
+    };
+  };
 }
