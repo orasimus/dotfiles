@@ -8,6 +8,7 @@
   home.packages = with pkgs; [
     ripgrep
     fd
+    discord
   ];
 
   # example: configure git properly
