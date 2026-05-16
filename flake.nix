@@ -16,6 +16,7 @@
         ./configuration.nix
         home-manager.nixosModules.home-manager
         {
+          home-manager.useUserPackages = true;
           home-manager.users.otso = import ./home.nix;
         }
       ];

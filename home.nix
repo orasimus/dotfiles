@@ -22,7 +22,6 @@
     };
   };
 
-  # firefox user-level config (extensions, profiles etc) goes here too
   programs.firefox = {
     enable = true;
   };
