@@ -130,6 +130,20 @@
     enable32Bit = true;
   };
 
+  # Unlocks AMD microcode updates and firmware blobs assumed by hardware-configuration.nix.
+  hardware.enableRedistributableFirmware = true;
+
+  # Nix store maintenance: weekly GC of generations older than 30 days + dedup.
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d";
+  };
+  nix.settings.auto-optimise-store = true;
+
+  # Compressed RAM swap — low-friction memory pressure relief for a desktop.
+  zramSwap.enable = true;
+
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
