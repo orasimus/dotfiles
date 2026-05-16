@@ -91,6 +91,8 @@
     };
   };
 
+  # These files are force-written by home-manager. Any changes made in the KDE
+  # System Settings GUI will be silently overwritten on the next `asenna`.
   xdg.configFile."ksmserverrc" = {
     force = true;
     text = ''
