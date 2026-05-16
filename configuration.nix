@@ -86,8 +86,24 @@
 
   # Configure keymap in X11
   services.xserver.xkb = {
-    layout = "us";
-    variant = "";
+    layout = "us-umlauts";
+    extraLayouts.us-umlauts = {
+      description = "US with umlaut shortcuts on AltGr+; and AltGr+'";
+      languages = [ "eng" ];
+      symbolsFile = pkgs.writeText "us-umlauts" ''
+        partial alphanumeric_keys
+        xkb_symbols "basic" {
+            include "us"
+            include "level3(ralt_switch)"
+            key <AC10> { [ semicolon, colon,    odiaeresis, Odiaeresis ] };
+            key <AC11> { [ apostrophe, quotedbl, adiaeresis, Adiaeresis ] };
+        };
+      '';
+    };
+  };
+
+  environment.variables = {
+    XKB_DEFAULT_LAYOUT = "us-umlauts";
   };
 
   # Enable CUPS to print documents.
@@ -204,6 +220,23 @@
 
   programs.steam.enable = true;
 
+  services.keyd = {
+    enable = true;
+    keyboards.default = {
+      ids = [ "*" ];
+      settings = {
+        control = {
+          semicolon  = "G-semicolon";
+          apostrophe = "G-apostrophe";
+        };
+        "shift+control" = {
+          semicolon  = "G-S-semicolon";
+          apostrophe = "G-S-apostrophe";
+        };
+      };
+    };
+  };
+
   programs.fish.enable = true;
   users.users.otso = {
     shell = pkgs.fish;
@@ -217,7 +250,6 @@
   environment.systemPackages = with pkgs; [
     claude-code
     git
-    helix
   #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
   #  wget
   ];
