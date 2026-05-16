@@ -235,6 +235,8 @@
 
   programs.steam.enable = true;
 
+  # Remap Ctrl+;/' → Super+;/' so KDE shortcuts on those keys don't conflict
+  # with the umlaut AltGr layer which also lives on ; and '.
   services.keyd = {
     enable = true;
     keyboards.default = {
