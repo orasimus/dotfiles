@@ -272,6 +272,8 @@
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
+  fonts.packages = [ pkgs.comic-mono ];
+
   environment.systemPackages = with pkgs; [
     claude-code
     git

@@ -10,7 +10,6 @@
     ripgrep
     fd
     discord
-    comic-mono
   ];
 
   programs.peon-ping = {
