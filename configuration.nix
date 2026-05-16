@@ -105,18 +105,6 @@
           install_url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi";
           installation_mode = "force_installed";
         };
-        "jid1-BoFifL9Vbdl2zQ@jetpack" = {
-          install_url = "https://addons.mozilla.org/firefox/downloads/latest/decentraleyes/latest.xpi";
-          installation_mode = "force_installed";
-        };
-        "{74145f27-f039-47ce-a470-a662b129930a}" = {
-          install_url = "https://addons.mozilla.org/firefox/downloads/latest/clearurls/latest.xpi";
-          installation_mode = "force_installed";
-        };
-        "CookieAutoDelete@kennydo.com" = {
-          install_url = "https://addons.mozilla.org/firefox/downloads/latest/cookie-autodelete/latest.xpi";
-          installation_mode = "force_installed";
-        };
         "{446900e4-71c2-419f-a6a7-df9c091e268b}" = {
           install_url = "https://addons.mozilla.org/firefox/downloads/latest/bitwarden-password-manager/latest.xpi";
           installation_mode = "force_installed";
@@ -124,6 +112,43 @@
         "plasma-browser-integration@kde.org" = {
           install_url = "https://addons.mozilla.org/firefox/downloads/latest/plasma-integration/latest.xpi";
           installation_mode = "force_installed";
+        };
+        "skipredirect@sblask" = {
+          install_url = "https://addons.mozilla.org/firefox/downloads/latest/skip-redirect/latest.xpi";
+          installation_mode = "force_installed";
+        };
+      };
+      Preferences = {
+        "browser.contentblocking.category" = {
+          Value = "strict";
+          Status = "locked";
+        };
+      };
+      "3rdparty" = {
+        Extensions = {
+          "uBlock0@raymondhill.net" = {
+            adminSettings = {
+              userSettings = {
+                importedLists = [
+                  "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/LegitimateURLShortener.txt"
+                ];
+              };
+              selectedFilterLists = [
+                "user-filters"
+                "ublock-filters"
+                "ublock-badware"
+                "ublock-privacy"
+                "ublock-unbreak"
+                "ublock-quick-fixes"
+                "easylist"
+                "easyprivacy"
+                "urlhaus-1"
+                "plowe-0"
+                "adguard-spyware-url"
+                "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/LegitimateURLShortener.txt"
+              ];
+            };
+          };
         };
       };
     };
