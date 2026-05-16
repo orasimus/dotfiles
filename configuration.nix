@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 {
   imports =
@@ -25,6 +25,38 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
+  # Two settings together stop NM from leaking the LAN's DHCP-pushed
+  # DNS into resolved, which would otherwise override the global
+  # Mullvad servers (per-link DNS beats global in resolved's routing):
+  #
+  # - `dns = "none"` stops NM from managing /etc/resolv.conf. `mkForce`
+  #   is needed because NixOS's resolved module otherwise pins this to
+  #   "systemd-resolved".
+  # - `ipv4/6.ignore-auto-dns` makes NM discard DHCP-supplied DNS on
+  #   every connection, so its resolved plugin has nothing to push over
+  #   D-Bus. Static DNS set on an NM connection (e.g. an NM-managed
+  #   VPN's pushed DNS) is unaffected, so VPNs still get their DNS.
+  networking.networkmanager.dns = lib.mkForce "none";
+  networking.networkmanager.settings.connection = {
+    "ipv4.ignore-auto-dns" = true;
+    "ipv6.ignore-auto-dns" = true;
+  };
+
+  # Encrypted DNS via Mullvad over DoT.
+  # `Domains = "~."` makes the global servers the default-route resolver
+  # (otherwise router-pushed DHCP DNS wins on the link). VPN-pushed link
+  # DNS still wins on its own link when active. `opportunistic` falls back
+  # to plain DNS on networks that don't speak DoT, so we don't get locked
+  # out of captive portals or quirky home networks.
+  services.resolved = {
+    enable = true;
+    settings.Resolve = {
+      DNSSEC = "allow-downgrade";
+      DNSOverTLS = "opportunistic";
+      Domains = "~.";
+    };
+  };
+  networking.nameservers = [ "194.242.2.2" "2a07:e340::2" ];
 
   # Set your time zone.
   time.timeZone = "Pacific/Auckland";
