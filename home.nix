@@ -90,4 +90,34 @@
       asenna = "sudo nixos-rebuild switch --flake ~/.dotfiles#markeeg";
     };
   };
+
+  xdg.configFile."ksmserverrc" = {
+    force = true;
+    text = ''
+      [General]
+      loginMode=emptySession
+    '';
+  };
+
+  # Screen off after 5 min, no suspend, no auto-lock.
+  xdg.configFile."powerdevilrc" = {
+    force = true;
+    text = ''
+      [AC][Display and Brightness]
+      DimDisplay=false
+      TurnOffDisplay=true
+      TurnOffDisplayIdleTimeoutSec=300
+
+      [AC][Suspend and Power Button]
+      AutoSuspendAction=0
+    '';
+  };
+
+  xdg.configFile."kscreenlockerrc" = {
+    force = true;
+    text = ''
+      [Daemon]
+      Autolock=false
+    '';
+  };
 }
