@@ -134,6 +134,7 @@
       DisableFormHistory = true;
       DisableFirefoxAccounts = true;
       HttpsOnlyMode = "force_enabled";
+      SearchEngines.Default = "DuckDuckGo";
       OverrideFirstRunPage = "";
       OverridePostUpdatePage = "";
       DNSOverHTTPS = {
