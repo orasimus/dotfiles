@@ -100,6 +100,16 @@
       DisablePocket = true;
       OfferToSaveLogins = false;
       DisableFormHistory = true;
+      DisableFirefoxAccounts = true;
+      HttpsOnlyMode = "force_enabled";
+      OverrideFirstRunPage = "";
+      OverridePostUpdatePage = "";
+      DNSOverHTTPS = {
+        Enabled = true;
+        ProviderURL = "https://base.dns.mullvad.net/dns-query";
+        Locked = true;
+        Fallback = true;
+      };
       ExtensionSettings = {
         "uBlock0@raymondhill.net" = {
           install_url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi";
