@@ -3,7 +3,7 @@
   imports = [ peon-ping.homeManagerModules.default ];
   home.username = "otso";
   home.homeDirectory = "/home/otso";
-  home.stateVersion = "26.05";  # match your system stateVersion
+  home.stateVersion = "25.11";  # original install version — do not bump, independent of system.stateVersion
 
   # user-level packages (as opposed to system-wide)
   home.packages = with pkgs; [
@@ -81,6 +81,7 @@
 
   programs.firefox = {
     enable = true;
+    configPath = "${config.xdg.configHome}/mozilla/firefox";
     nativeMessagingHosts = [ pkgs.kdePackages.plasma-browser-integration ];
   };
 
