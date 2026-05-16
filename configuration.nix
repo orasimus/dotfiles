@@ -162,6 +162,7 @@
   # Install firefox.
   programs.firefox = {
     enable = true;
+    nativeMessagingHosts.packages = [ pkgs.kdePackages.plasma-browser-integration ];
     policies = {
       DisableTelemetry = true;
       DisableFirefoxStudies = true;
