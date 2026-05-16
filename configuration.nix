@@ -133,11 +133,12 @@
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
+  # Define a user account. Don’t forget to set a password with ‘passwd’.
   users.users.otso = {
     isNormalUser = true;
     description = "otso";
     extraGroups = [ "networkmanager" "wheel" ];
+    shell = pkgs.fish;
     packages = with pkgs; [
       kdePackages.kate
     #  thunderbird
@@ -245,10 +246,9 @@
     AllowSuspendThenHibernate = "no";
   };
 
+  # fish.enable at system level installs shell completions and /etc/shells entry;
+  # the user program config lives in home.nix — both are needed.
   programs.fish.enable = true;
-  users.users.otso = {
-    shell = pkgs.fish;
-  };
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
