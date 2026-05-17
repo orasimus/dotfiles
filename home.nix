@@ -10,6 +10,8 @@
     ripgrep
     fd
     discord
+    heroic
+    mpv
   ];
 
   programs.peon-ping = {
