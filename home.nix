@@ -7,11 +7,13 @@
 
   # user-level packages (as opposed to system-wide)
   home.packages = with pkgs; [
+    jq
     ripgrep
     fd
     discord
     heroic
     mpv
+    qbittorrent
   ];
 
   programs.peon-ping = {
