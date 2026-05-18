@@ -87,6 +87,7 @@
     shellAliases = {
       asenna = "sudo nixos-rebuild switch --flake ~/.dotfiles#markeeg";
     };
+    functions.fish_greeting = "";
   };
 
   # These files are force-written by home-manager. Any changes made in the KDE
