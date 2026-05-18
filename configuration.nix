@@ -133,6 +133,12 @@
   # Unlocks AMD microcode updates and firmware blobs assumed by hardware-configuration.nix.
   hardware.enableRedistributableFirmware = true;
 
+  # Bluetooth — Plasma's bluedevil applet provides the GUI; no blueman needed.
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
+
   # Nix store maintenance: weekly GC of generations older than 30 days + dedup.
   nix.gc = {
     automatic = true;
