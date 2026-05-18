@@ -7,9 +7,7 @@
 
   # user-level packages (as opposed to system-wide)
   home.packages = with pkgs; [
-    jq
-    ripgrep
-    fd
+    claude-code
     discord
     heroic
     mpv
@@ -33,6 +31,8 @@
     enable = true;
     settings.theme = "catppuccin_mocha";
   };
+
+  programs.starship.enable = true;
 
   programs.kitty = {
     enable = true;

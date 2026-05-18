@@ -281,10 +281,16 @@
   fonts.packages = [ pkgs.comic-mono ];
 
   environment.systemPackages = with pkgs; [
-    claude-code
-    vlc
-  #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-  #  wget
+    bat
+    btop
+    eza
+    fd
+    fzf
+    jq
+    nnn
+    ripgrep
+    tldr
+    zoxide
   ];
 
   # Some programs need SUID wrappers, can be configured further or are

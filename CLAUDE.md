@@ -30,9 +30,11 @@ The flake (`flake.nix`) wires together three files into a single `nixosConfigura
 
 ### Where to put a new package
 
-- **System-wide CLI or service** (e.g. `git`, `helix`, a daemon) → `environment.systemPackages` in `configuration.nix`.
-- **Personal tool that only `otso` uses** (e.g. `ripgrep`, `fd`) → `home.packages` in `home.nix`. Prefer this by default — it keeps the system closure small and the config focused.
-- **Program with managed config** (shell, editor, git) → use the `programs.<name>` module in `home.nix` rather than installing the bare package, so config and binary stay together.
+The split is by **who needs to run it**, not GUI-vs-CLI:
+
+- **System** (`environment.systemPackages` in `configuration.nix`) — anything that needs to be reachable as root or before login: core CLI utilities you'd reach for under `sudo` or from a recovery TTY (`ripgrep`, `fd`, `jq`), editors used for sudo edits, services and daemons. Home-manager installs into `~/.nix-profile/bin`, which is not in root's PATH — so if you ever want `sudo rg /etc/...` to work, the tool belongs here.
+- **Home** (`home.packages` in `home.nix`) — things only `otso` runs as themselves: GUI apps (`mpv`, `discord`), `claude-code`, anything tied to the user's session.
+- **Program with managed config** (shell, editor, git) — use the `programs.<name>` module in `home.nix` rather than installing the bare package, so config and binary stay together.
 
 ## Conventions
 
