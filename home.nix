@@ -38,6 +38,7 @@
     enable = true;
     settings = {
       font_family = "Comic Mono";
+      confirm_os_window_close = 0;
       background            = "#1e1e2e";
       foreground            = "#cdd6f4";
       selection_background  = "#cba6f7";
