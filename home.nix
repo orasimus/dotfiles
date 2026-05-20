@@ -12,6 +12,7 @@
     heroic
     mpv
     qbittorrent
+    zapzap
   ];
 
   programs.peon-ping = {
