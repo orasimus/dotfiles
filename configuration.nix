@@ -25,38 +25,38 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
-  # Two settings together stop NM from leaking the LAN's DHCP-pushed
-  # DNS into resolved, which would otherwise override the global
-  # Mullvad servers (per-link DNS beats global in resolved's routing):
-  #
-  # - `dns = "none"` stops NM from managing /etc/resolv.conf. `mkForce`
-  #   is needed because NixOS's resolved module otherwise pins this to
-  #   "systemd-resolved".
-  # - `ipv4/6.ignore-auto-dns` makes NM discard DHCP-supplied DNS on
-  #   every connection, so its resolved plugin has nothing to push over
-  #   D-Bus. Static DNS set on an NM connection (e.g. an NM-managed
-  #   VPN's pushed DNS) is unaffected, so VPNs still get their DNS.
-  networking.networkmanager.dns = lib.mkForce "none";
-  networking.networkmanager.settings.connection = {
-    "ipv4.ignore-auto-dns" = true;
-    "ipv6.ignore-auto-dns" = true;
-  };
 
-  # Encrypted DNS via Mullvad over DoT.
-  # `Domains = "~."` makes the global servers the default-route resolver
-  # (otherwise router-pushed DHCP DNS wins on the link). VPN-pushed link
-  # DNS still wins on its own link when active. `opportunistic` falls back
-  # to plain DNS on networks that don't speak DoT, so we don't get locked
-  # out of captive portals or quirky home networks.
-  services.resolved = {
-    enable = true;
-    settings.Resolve = {
-      DNSSEC = "allow-downgrade";
-      DNSOverTLS = "opportunistic";
-      Domains = "~.";
-    };
+  # systemd-resolved owns /etc/resolv.conf. wg-quick's `dns =` directive
+  # below pushes Nord's resolver into it via resolvconf when the tunnel
+  # comes up.
+  services.resolved.enable = true;
+
+  # NordVPN via native WireGuard (NordLynx). Pinned to nz94 — lowest-load
+  # Auckland gateway at config time (load 21%). NordLynx publishes one
+  # WireGuard public key for the whole NZ cluster, so rotating to another
+  # NZ server only requires changing the endpoint IP (re-query
+  # api.nordvpn.com/v1/servers/recommendations with country_id=156 and
+  # technology wireguard_udp; the `station` field is the endpoint IP).
+  #
+  # Private key lives at /etc/nordlynx/private.key (root:root 0400) so the
+  # secret never enters the nix store or git. Regenerate via
+  # `curl -u token:<access_token> https://api.nordvpn.com/v1/users/services/credentials`
+  # whenever NordVPN rotates the credential.
+  #
+  # DNS is set on the interface to Nord's resolver (103.86.96.100) so
+  # name resolution rides the tunnel when up, without depending on any
+  # host-level DNS config.
+  networking.wg-quick.interfaces.nordlynx = {
+    address = [ "10.5.0.2/32" ];
+    privateKeyFile = "/etc/nordlynx/private.key";
+    dns = [ "103.86.96.100" ];
+    peers = [{
+      publicKey = "P7Dv2WoopPHomMq6jnvwV2hnV2BnI/7LklaIUTEzSQ8=";
+      allowedIPs = [ "0.0.0.0/0" "::/0" ];
+      endpoint = "180.149.231.154:51820";
+      persistentKeepalive = 25;
+    }];
   };
-  networking.nameservers = [ "194.242.2.2" "2a07:e340::2" ];
 
   # Set your time zone.
   time.timeZone = "Pacific/Auckland";
