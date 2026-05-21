@@ -235,34 +235,29 @@ in
     LC_TIME = "en_NZ.UTF-8";
   };
 
-  # Enable the X11 windowing system.
-  # You can disable this if you're only using the Wayland session.
   services.xserver.enable = true;
 
-  # Enable the KDE Plasma Desktop Environment.
-  services.displayManager.sddm.enable = true;
-  services.desktopManager.plasma6.enable = true;
-
-  # Configure keymap in X11
-  services.xserver.xkb = {
-    layout = "us-umlauts";
-    extraLayouts.us-umlauts = {
-      description = "US with umlaut shortcuts on AltGr+; and AltGr+'";
-      languages = [ "eng" ];
-      symbolsFile = pkgs.writeText "us-umlauts" ''
-        partial alphanumeric_keys
-        xkb_symbols "basic" {
-            include "us"
-            include "level3(ralt_switch)"
-            key <AC10> { [ semicolon, colon,    odiaeresis, Odiaeresis ] };
-            key <AC11> { [ apostrophe, quotedbl, adiaeresis, Adiaeresis ] };
-        };
-      '';
-    };
+  # Wayland compositor — Hyprland, launched via UWSM (systemd-managed session
+  # target). The module pulls in xdg-desktop-portal-hyprland; the GTK portal
+  # below covers file pickers and the GTK/GNOME-style portal calls.
+  programs.hyprland = {
+    enable = true;
+    withUWSM = true;
   };
 
-  environment.variables = {
-    XKB_DEFAULT_LAYOUT = "us-umlauts";
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  };
+
+  # Login: greetd + tuigreet. The --cmd value mirrors what hyprland-uwsm.desktop
+  # ships with so the session starts under UWSM exactly as a graphical DM would.
+  services.greetd = {
+    enable = true;
+    settings.default_session = {
+      command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --cmd 'uwsm start -e -D Hyprland hyprland.desktop'";
+      user = "greeter";
+    };
   };
 
   # Enable CUPS to print documents.
@@ -292,7 +287,7 @@ in
   # Unlocks AMD microcode updates and firmware blobs assumed by hardware-configuration.nix.
   hardware.enableRedistributableFirmware = true;
 
-  # Bluetooth — Plasma's bluedevil applet provides the GUI; no blueman needed.
+  # Bluetooth — managed from a terminal via `bluetoothctl` (no tray applet).
   hardware.bluetooth = {
     enable = true;
     powerOnBoot = true;
@@ -319,7 +314,6 @@ in
     extraGroups = [ "networkmanager" "wheel" ];
     shell = pkgs.fish;
     packages = with pkgs; [
-      kdePackages.kate
     #  thunderbird
     ];
   };
@@ -327,7 +321,6 @@ in
   # Install firefox.
   programs.firefox = {
     enable = true;
-    nativeMessagingHosts.packages = [ pkgs.kdePackages.plasma-browser-integration ];
     policies = {
       DisableTelemetry = true;
       DisableFirefoxStudies = true;
@@ -420,11 +413,6 @@ in
         };
         "{446900e4-71c2-419f-a6a7-df9c091e268b}" = {
           install_url = "https://addons.mozilla.org/firefox/downloads/latest/bitwarden-password-manager/latest.xpi";
-          installation_mode = "force_installed";
-          private_browsing = true;
-        };
-        "plasma-browser-integration@kde.org" = {
-          install_url = "https://addons.mozilla.org/firefox/downloads/latest/plasma-integration/latest.xpi";
           installation_mode = "force_installed";
           private_browsing = true;
         };
@@ -708,25 +696,6 @@ in
   };
 
   programs.steam.enable = true;
-
-  # Remap Ctrl+;/' → Super+;/' so KDE shortcuts on those keys don't conflict
-  # with the umlaut AltGr layer which also lives on ; and '.
-  services.keyd = {
-    enable = true;
-    keyboards.default = {
-      ids = [ "*" ];
-      settings = {
-        control = {
-          semicolon  = "G-semicolon";
-          apostrophe = "G-apostrophe";
-        };
-        "shift+control" = {
-          semicolon  = "G-S-semicolon";
-          apostrophe = "G-S-apostrophe";
-        };
-      };
-    };
-  };
 
   # Disable system sleep/suspend/hibernate entirely.
   systemd.sleep.settings.Sleep = {

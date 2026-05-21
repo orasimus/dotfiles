@@ -9,9 +9,11 @@
   home.packages = with pkgs; [
     claude-code
     discord
+    fuzzel
     heroic
     mpv
     qbittorrent
+    wtype
     zapzap
   ];
 
@@ -23,7 +25,10 @@
       default_pack = "peon";
       volume = 0.7;
       enabled = true;
-      desktop_notifications = true;
+      # No desktop-notification daemon is running on this host (Hyprland is
+      # bar-less and notification-less by design), so the popup channel would
+      # silently drop. Audio still fires.
+      desktop_notifications = false;
     };
     installPacks = [ "peon" ];
   };
@@ -92,35 +97,155 @@
     functions.fish_greeting = "";
   };
 
-  # These files are force-written by home-manager. Any changes made in the KDE
-  # System Settings GUI will be silently overwritten on the next `asenna`.
-  xdg.configFile."ksmserverrc" = {
-    force = true;
-    text = ''
-      [General]
-      loginMode=emptySession
-    '';
+  xdg.desktopEntries.nixi = {
+    name = "nixi";
+    exec = "kitty --session ${config.home.homeDirectory}/.config/kitty/dotfiles.session";
+    terminal = false;
   };
 
-  # Screen off after 5 min, no suspend, no auto-lock.
-  xdg.configFile."powerdevilrc" = {
-    force = true;
-    text = ''
-      [AC][Display and Brightness]
-      DimDisplay=false
-      TurnOffDisplay=true
-      TurnOffDisplayIdleTimeoutSec=300
+  xdg.configFile."kitty/dotfiles.session".text = ''
+    new_tab dotfiles
+    layout splits
+    launch --cwd /home/otso/.dotfiles claude
+    launch --cwd /home/otso/.dotfiles --location=vsplit hx .
+    launch --cwd /home/otso/.dotfiles --location=hsplit
+  '';
 
-      [AC][Suspend and Power Button]
-      AutoSuspendAction=0
-    '';
+  # Hyprland compositor. systemd integration off — UWSM (enabled at the system
+  # level via programs.hyprland.withUWSM) owns the hyprland-session.target, and
+  # letting both manage it leads to dueling units.
+  #
+  # Umlauts: Ctrl+;/' → ö/ä, Ctrl+Shift+:/" → Ö/Ä. Implemented as Hyprland
+  # binds that absorb the chord and inject the literal character via wtype.
+  # Pure-XKB Ctrl-as-level3 is technically possible but leaks the Ctrl modifier
+  # to some apps (helix, browsers) because "consumed modifier" handling is
+  # inconsistent; wtype guarantees apps see a plain keypress.
+  wayland.windowManager.hyprland = {
+    enable = true;
+    systemd.enable = false;
+    configType = "hyprlang";
+    settings = {
+      input = {
+        kb_layout = "us";
+        follow_mouse = 1;
+      };
+
+      general = {
+        gaps_in = 4;
+        gaps_out = 8;
+        border_size = 2;
+      };
+
+      decoration = {
+        rounding = 4;
+      };
+
+      ecosystem = {
+        no_update_news = true;
+      };
+
+      bind = [
+        # umlauts (Ctrl+;/' → ö/ä, Ctrl+Shift → capitals)
+        "CTRL, semicolon,  exec, wtype -- ö"
+        "CTRL, apostrophe, exec, wtype -- ä"
+        "CTRL SHIFT, semicolon,  exec, wtype -- Ö"
+        "CTRL SHIFT, apostrophe, exec, wtype -- Ä"
+
+        # apps
+        "SUPER, Return, exec, kitty"
+        "SUPER, D, exec, fuzzel"
+        "SUPER, L, exec, hyprlock"
+
+        # window mgmt
+        "SUPER, Q, killactive,"
+        "SUPER, F, fullscreen,"
+        "SUPER, V, togglefloating,"
+
+        # focus (arrows — SUPER+L is taken by hyprlock above)
+        "SUPER, left,  movefocus, l"
+        "SUPER, down,  movefocus, d"
+        "SUPER, up,    movefocus, u"
+        "SUPER, right, movefocus, r"
+
+        # move windows
+        "SUPER SHIFT, left,  movewindow, l"
+        "SUPER SHIFT, down,  movewindow, d"
+        "SUPER SHIFT, up,    movewindow, u"
+        "SUPER SHIFT, right, movewindow, r"
+
+        # workspaces
+        "SUPER, 1, workspace, 1"
+        "SUPER, 2, workspace, 2"
+        "SUPER, 3, workspace, 3"
+        "SUPER, 4, workspace, 4"
+        "SUPER, 5, workspace, 5"
+        "SUPER, 6, workspace, 6"
+        "SUPER, 7, workspace, 7"
+        "SUPER, 8, workspace, 8"
+        "SUPER, 9, workspace, 9"
+        "SUPER SHIFT, 1, movetoworkspace, 1"
+        "SUPER SHIFT, 2, movetoworkspace, 2"
+        "SUPER SHIFT, 3, movetoworkspace, 3"
+        "SUPER SHIFT, 4, movetoworkspace, 4"
+        "SUPER SHIFT, 5, movetoworkspace, 5"
+        "SUPER SHIFT, 6, movetoworkspace, 6"
+        "SUPER SHIFT, 7, movetoworkspace, 7"
+        "SUPER SHIFT, 8, movetoworkspace, 8"
+        "SUPER SHIFT, 9, movetoworkspace, 9"
+      ];
+
+      # Mouse-drag move/resize
+      bindm = [
+        "SUPER, mouse:272, movewindow"
+        "SUPER, mouse:273, resizewindow"
+      ];
+    };
   };
 
-  xdg.configFile."kscreenlockerrc" = {
-    force = true;
-    text = ''
-      [Daemon]
-      Autolock=false
-    '';
+  # Idle handling: blank the display after 5 min (matches the previous
+  # powerdevilrc behaviour). No auto-lock — Super+L locks manually.
+  services.hypridle = {
+    enable = true;
+    settings = {
+      general = {
+        lock_cmd = "pidof hyprlock || hyprlock";
+        before_sleep_cmd = "loginctl lock-session";
+        after_sleep_cmd = "hyprctl dispatch dpms on";
+      };
+      listener = [
+        {
+          timeout = 300;
+          on-timeout = "hyprctl dispatch dpms off";
+          on-resume = "hyprctl dispatch dpms on";
+        }
+      ];
+    };
+  };
+
+  # Lockscreen — plain black background, password input centred. Expand later.
+  programs.hyprlock = {
+    enable = true;
+    settings = {
+      general = {
+        hide_cursor = true;
+      };
+      background = [
+        {
+          monitor = "";
+          color = "rgba(0, 0, 0, 1.0)";
+        }
+      ];
+      input-field = [
+        {
+          monitor = "";
+          size = "20%, 5%";
+          position = "0, -20";
+          halign = "center";
+          valign = "center";
+          fade_on_empty = false;
+          placeholder_text = "Password";
+        }
+      ];
+    };
   };
 }
