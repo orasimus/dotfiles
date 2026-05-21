@@ -35,7 +35,10 @@
 
   programs.helix = {
     enable = true;
-    settings.theme = "catppuccin_mocha";
+    settings = {
+      theme = "catppuccin_mocha";
+      editor.soft-wrap.enable = true;
+    };
   };
 
   programs.starship.enable = true;
