@@ -12,6 +12,7 @@
     fuzzel
     heroic
     mpv
+    sublime-merge
     qbittorrent
     wtype
     zapzap
