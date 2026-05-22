@@ -85,7 +85,11 @@ in
     settings = {
       font_family = "Comic Mono";
       confirm_os_window_close = 0;
-      allow_remote_control = "yes";
+      # Restrict the kitty control protocol to the abstract socket below — keeps
+      # the ctrl+shift+a chord working without exposing the API to any other
+      # process in the session.
+      allow_remote_control = "socket-only";
+      listen_on = "unix:@kitty";
       background            = "#1e1e2e";
       foreground            = "#cdd6f4";
       selection_background  = "#cba6f7";
@@ -148,9 +152,9 @@ in
   xdg.configFile."kitty/dotfiles.session".text = ''
     new_tab dotfiles
     layout splits
-    launch --cwd /home/otso/.dotfiles claude
-    launch --cwd /home/otso/.dotfiles --location=vsplit hx .
-    launch --cwd /home/otso/.dotfiles --location=hsplit --var role=asenna
+    launch --cwd ${config.home.homeDirectory}/.dotfiles claude
+    launch --cwd ${config.home.homeDirectory}/.dotfiles --location=vsplit hx .
+    launch --cwd ${config.home.homeDirectory}/.dotfiles --location=hsplit --var role=asenna
   '';
 
   # Hyprland compositor. systemd integration off — UWSM (enabled at the system
