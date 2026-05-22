@@ -235,8 +235,6 @@ in
     LC_TIME = "en_NZ.UTF-8";
   };
 
-  services.xserver.enable = true;
-
   # Rewrite Ctrl+;/' (and Shift variants) to AltGr+;/' at the evdev layer so
   # the xkb keymap (see home.nix: wayland.windowManager.hyprland.input.kb_file)
   # produces ö/ä for Otso's Ctrl muscle memory. keyd operates below xkb in
