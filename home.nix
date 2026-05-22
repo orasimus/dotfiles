@@ -70,9 +70,22 @@ in
 
   programs.kitty = {
     enable = true;
+    keybindings = {
+      # In a nixi session, focus the asenna pane and send `asenna` to it.
+      # The pane is tagged var:role=asenna in the session file below.
+      # `focus_matching_window` is not a built-in action; matching by
+      # criteria requires the remote_control action (needs allow_remote_control).
+      # `send_text` (the built-in action, not `remote_control send-text`)
+      # interprets escape sequences, so \x03 sends Ctrl+C to clear any
+      # pending input / interrupt a running command before submitting.
+      # Split into two send_text calls so the \x03 (Ctrl+C) escape can't
+      # absorb the following `a` as a third hex digit.
+      "ctrl+shift+a" = "combine | remote_control focus-window --match var:role=asenna | send_text all \\x03 | send_text all asenna\\n";
+    };
     settings = {
       font_family = "Comic Mono";
       confirm_os_window_close = 0;
+      allow_remote_control = "yes";
       background            = "#1e1e2e";
       foreground            = "#cdd6f4";
       selection_background  = "#cba6f7";
@@ -136,7 +149,7 @@ in
     layout splits
     launch --cwd /home/otso/.dotfiles claude
     launch --cwd /home/otso/.dotfiles --location=vsplit hx .
-    launch --cwd /home/otso/.dotfiles --location=hsplit
+    launch --cwd /home/otso/.dotfiles --location=hsplit --var role=asenna
   '';
 
   # Hyprland compositor. systemd integration off — UWSM (enabled at the system
