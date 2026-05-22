@@ -152,18 +152,6 @@ in
   # Select internationalisation properties.
   i18n.defaultLocale = "en_NZ.UTF-8";
 
-  i18n.extraLocaleSettings = {
-    LC_ADDRESS = "en_NZ.UTF-8";
-    LC_IDENTIFICATION = "en_NZ.UTF-8";
-    LC_MEASUREMENT = "en_NZ.UTF-8";
-    LC_MONETARY = "en_NZ.UTF-8";
-    LC_NAME = "en_NZ.UTF-8";
-    LC_NUMERIC = "en_NZ.UTF-8";
-    LC_PAPER = "en_NZ.UTF-8";
-    LC_TELEPHONE = "en_NZ.UTF-8";
-    LC_TIME = "en_NZ.UTF-8";
-  };
-
   # Rewrite Ctrl+;/' (and Shift variants) to AltGr+;/' at the evdev layer so
   # the xkb keymap (see home.nix: wayland.windowManager.hyprland.input.kb_file)
   # produces ö/ä for Otso's Ctrl muscle memory. keyd operates below xkb in
@@ -223,7 +211,6 @@ in
   services.fwupd.enable = true;
 
   # Enable sound with pipewire.
-  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -246,16 +233,15 @@ in
     powerOnBoot = true;
   };
 
-  # Nix store maintenance: weekly GC of generations older than 14 days + dedup.
-  # `optimise.automatic` runs the hardlink dedup pass on a timer; `auto-optimise-store`
-  # also dedups during every build, so we get both incremental and periodic coverage.
+  # Nix store maintenance: weekly GC of generations older than 14 days.
+  # `auto-optimise-store` dedups during every build.
   nix.gc = {
     automatic = true;
     dates = "weekly";
     options = "--delete-older-than 14d";
   };
-  nix.optimise.automatic = true;
   nix.settings.auto-optimise-store = true;
+
 
   # Wipe /tmp on boot — desktop with no encrypted swap, no reason to keep stale tmp.
   boot.tmp.cleanOnBoot = true;

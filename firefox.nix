@@ -26,12 +26,6 @@
       HttpsOnlyMode = "force_enabled";
       OverrideFirstRunPage = "";
       OverridePostUpdatePage = "";
-      DNSOverHTTPS = {
-        Enabled = true;
-        ProviderURL = "https://base.dns.mullvad.net/dns-query";
-        Locked = true;
-        Fallback = true;
-      };
       UserMessaging = {
         WhatsNew = false;
         ExtensionRecommendations = false;
@@ -323,10 +317,6 @@
         "browser.safebrowsing.downloads.remote.enabled" = { Value = false; Status = "locked"; };
         "browser.safebrowsing.downloads.remote.url" = { Value = ""; Status = "locked"; };
 
-        # DoH defence-in-depth (Mullvad already set via policy)
-        "network.trr.send_user-agent_headers" = { Value = false; Status = "locked"; };
-        "doh-rollout.disable-heuristics" = { Value = true; Status = "locked"; };
-        "doh-rollout.skipHeuristicsCheck" = { Value = true; Status = "locked"; };
 
         # Firefox Accounts / Sync backing prefs
         "identity.fxaccounts.enabled" = { Value = false; Status = "locked"; };
