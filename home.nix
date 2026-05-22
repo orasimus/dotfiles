@@ -38,6 +38,7 @@ in
     heroic
     mpv
     sublime-merge
+    spotify
     qbittorrent
     zapzap
   ];
