@@ -37,6 +37,34 @@ in
 
   networking.hostName = "markeeg";
   networking.networkmanager.enable = true;
+  # wg-quick owns the nordlynx interface — keep NM from touching it.
+  networking.networkmanager.unmanaged = [ "interface-name:nordlynx" ];
+
+  # Declarative WiFi via NetworkManager keyfile profiles. The PSK is kept
+  # out of the world-readable nix store: `$WIFI_HOME_PSK` is substituted
+  # at activation time from /etc/nm-secrets.env (root:root 0400), which
+  # must contain the single line `WIFI_HOME_PSK=<password>`.
+  networking.networkmanager.ensureProfiles = {
+    environmentFiles = [ "/etc/nm-secrets.env" ];
+    profiles.home = {
+      connection = {
+        id = "TP-Link_21EB";
+        type = "wifi";
+        autoconnect = true;
+      };
+      wifi = {
+        ssid = "TP-Link_21EB";
+        mode = "infrastructure";
+      };
+      wifi-security = {
+        auth-alg = "open";
+        key-mgmt = "wpa-psk";
+        psk = "$WIFI_HOME_PSK";
+      };
+      ipv4.method = "auto";
+      ipv6.method = "auto";
+    };
+  };
 
   # systemd-resolved owns /etc/resolv.conf. wg-quick's `dns =` directive
   # below pushes Nord's resolver into it via resolvconf when the tunnel
