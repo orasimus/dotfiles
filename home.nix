@@ -147,6 +147,12 @@ in
     systemd.enable = false;
     configType = "hyprlang";
     settings = {
+      # Dell U2412M sits physically to the left of the Samsung Odyssey.
+      monitor = [
+        "DP-2,3440x1440@119.96,0x0,1"
+        "HDMI-A-1,1920x1200@59.95,-1920x0,1"
+      ];
+
       input = {
         kb_file = "${umlautKeymap}";
         follow_mouse = 1;
