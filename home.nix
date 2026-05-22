@@ -69,6 +69,31 @@ in
 
   programs.starship.enable = true;
 
+  # Modern CLI tools — moved here from environment.systemPackages so fish
+  # integration (aliases, key bindings) is wired declaratively.
+  programs.eza = {
+    enable = true;
+    enableFishIntegration = true;
+    icons = "auto";
+    git = true;
+    extraOptions = [ "--group-directories-first" ];
+  };
+
+  programs.bat.enable = true;
+
+  programs.zoxide = {
+    enable = true;
+    enableFishIntegration = true;
+    # `--cmd cd` reuses the `cd` name for zoxide: frecency jumps for short
+    # names, normal cd semantics for absolute paths, `cd -`, `cd ..`, etc.
+    options = [ "--cmd" "cd" ];
+  };
+
+  programs.fzf = {
+    enable = true;
+    enableFishIntegration = true;
+  };
+
   programs.kitty = {
     enable = true;
     keybindings = {
@@ -139,6 +164,7 @@ in
     enable = true;
     shellAliases = {
       asenna = "sudo nixos-rebuild switch --flake ~/.dotfiles#markeeg";
+      cat = "bat";
     };
     functions.fish_greeting = "";
   };

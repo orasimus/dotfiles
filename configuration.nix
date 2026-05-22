@@ -136,17 +136,16 @@
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
+  # eza, bat, zoxide, fzf live in home-manager (home.nix) so they get fish
+  # integration (aliases, key bindings) declaratively. Tools below stay
+  # system-scoped because they're useful to root too and need no shell wiring.
   environment.systemPackages = with pkgs; [
-    bat
     btop
-    eza
     fd
-    fzf
     jq
     nnn
     ripgrep
     tldr
-    zoxide
   ];
 
   # Pinned to install version; independent of home.stateVersion. See
