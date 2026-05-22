@@ -24,7 +24,6 @@
       AppAutoUpdate = false;
       PostQuantumKeyAgreementEnabled = true;
       HttpsOnlyMode = "force_enabled";
-      SearchEngines.Default = "DuckDuckGo";
       OverrideFirstRunPage = "";
       OverridePostUpdatePage = "";
       DNSOverHTTPS = {
