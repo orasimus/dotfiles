@@ -247,12 +247,16 @@ in
   services.hypridle = {
     enable = true;
     settings = {
-      general = {
-        before_sleep_cmd = "loginctl lock-session";
-        after_sleep_cmd = "hyprctl dispatch dpms on";
-      };
       listener = [
         {
+          # On lockscreen: blank display after 1 min of idle.
+          # pidof check makes this a no-op during normal (unlocked) use.
+          timeout = 60;
+          on-timeout = "pidof hyprlock && hyprctl dispatch dpms off";
+          on-resume = "hyprctl dispatch dpms on";
+        }
+        {
+          # Normal use: blank display after 5 min of idle.
           timeout = 300;
           on-timeout = "hyprctl dispatch dpms off";
           on-resume = "hyprctl dispatch dpms on";
