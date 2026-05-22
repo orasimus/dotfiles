@@ -127,6 +127,7 @@ in
       };
       core.editor = "hx";
       init.defaultBranch = "main";
+      push.autoSetupRemote = true;
     };
   };
 
