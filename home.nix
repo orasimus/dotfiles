@@ -1,4 +1,29 @@
 { config, pkgs, peon-ping, ... }:
+let
+  # Standard US layout with AltGr as level-3 shifter, plus ö/ä on AC10/AC11.
+  # Combined with services.keyd (configuration.nix) which rewrites Ctrl+;/'
+  # → AltGr+;/' below xkb, this yields Ctrl+; → ö, Ctrl+' → ä, +Shift for
+  # capitals. Consumed by Hyprland's input.kb_file below.
+  umlautKeymap = pkgs.writeText "us-umlauts.xkb" ''
+    xkb_keymap {
+        xkb_keycodes { include "evdev+aliases(qwerty)" };
+        xkb_types    { include "complete" };
+        xkb_compat   { include "complete" };
+        xkb_symbols {
+            include "pc+us+inet(evdev)+level3(ralt_switch)"
+            override key <AC10> {
+                type[Group1] = "FOUR_LEVEL",
+                symbols[Group1] = [ semicolon,  colon,    odiaeresis, Odiaeresis ]
+            };
+            override key <AC11> {
+                type[Group1] = "FOUR_LEVEL",
+                symbols[Group1] = [ apostrophe, quotedbl, adiaeresis, Adiaeresis ]
+            };
+        };
+        xkb_geometry { include "pc(pc105)" };
+    };
+  '';
+in
 {
   imports = [ peon-ping.homeManagerModules.default ];
   home.username = "otso";
@@ -14,7 +39,6 @@
     mpv
     sublime-merge
     qbittorrent
-    wtype
     zapzap
   ];
 
@@ -118,19 +142,13 @@
   # Hyprland compositor. systemd integration off — UWSM (enabled at the system
   # level via programs.hyprland.withUWSM) owns the hyprland-session.target, and
   # letting both manage it leads to dueling units.
-  #
-  # Umlauts: Ctrl+;/' → ö/ä, Ctrl+Shift+:/" → Ö/Ä. Implemented as Hyprland
-  # binds that absorb the chord and inject the literal character via wtype.
-  # Pure-XKB Ctrl-as-level3 is technically possible but leaks the Ctrl modifier
-  # to some apps (helix, browsers) because "consumed modifier" handling is
-  # inconsistent; wtype guarantees apps see a plain keypress.
   wayland.windowManager.hyprland = {
     enable = true;
     systemd.enable = false;
     configType = "hyprlang";
     settings = {
       input = {
-        kb_layout = "us";
+        kb_file = "${umlautKeymap}";
         follow_mouse = 1;
       };
 
@@ -149,12 +167,6 @@
       };
 
       bind = [
-        # umlauts (Ctrl+;/' → ö/ä, Ctrl+Shift → capitals)
-        "CTRL, semicolon,  exec, wtype -- ö"
-        "CTRL, apostrophe, exec, wtype -- ä"
-        "CTRL SHIFT, semicolon,  exec, wtype -- Ö"
-        "CTRL SHIFT, apostrophe, exec, wtype -- Ä"
-
         # apps
         "SUPER, Return, exec, kitty"
         "SUPER, D, exec, fuzzel"
