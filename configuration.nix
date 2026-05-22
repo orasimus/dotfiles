@@ -197,6 +197,13 @@ in
   xdg.portal = {
     enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    # Hyprland's portal doesn't implement FileChooser, so route file pickers /
+    # settings to GTK and screen-capture to Hyprland explicitly.
+    config.common = {
+      default = [ "gtk" ];
+      "org.freedesktop.impl.portal.Screenshot" = [ "hyprland" ];
+      "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
+    };
   };
 
   # Login: greetd + tuigreet. The --cmd value mirrors what hyprland-uwsm.desktop
@@ -210,6 +217,10 @@ in
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
+
+  # Firmware updates via LVFS (UEFI, SSD, dock, etc.). Run `fwupdmgr refresh`
+  # then `fwupdmgr update` manually when you want to apply.
+  services.fwupd.enable = true;
 
   # Enable sound with pipewire.
   services.pulseaudio.enable = false;
@@ -285,7 +296,10 @@ in
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  fonts.packages = [ pkgs.comic-mono ];
+  fonts.packages = with pkgs; [
+    comic-mono
+    noto-fonts-cjk-sans  # proper CJK rendering; without it kanji/hanzi fall back to Unifont bitmaps
+  ];
 
   environment.systemPackages = with pkgs; [
     bat
