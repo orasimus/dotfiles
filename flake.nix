@@ -18,6 +18,11 @@
       system = "x86_64-linux";
       modules = [
         ./configuration.nix
+        # Pin the system's flake registry entry for `nixpkgs` to the same
+        # input this configuration was built from, so ad-hoc commands like
+        # `nix shell nixpkgs#foo` resolve against the locked revision instead
+        # of whatever the default registry points at (typically stale).
+        { nix.registry.nixpkgs.flake = nixpkgs; }
         home-manager.nixosModules.home-manager
         {
           home-manager.useGlobalPkgs = true;
