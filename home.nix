@@ -279,6 +279,18 @@ in
 
       ecosystem = {
         no_update_news = true;
+        no_donation_nag = true;
+      };
+
+      misc = {
+        disable_hyprland_logo = true;
+        disable_splash_rendering = true;
+        disable_scale_notification = true;
+        # Explicitly disable the bundled "anime girl" default wallpaper. The
+        # text baked into those PNGs (e.g. the "dt" easter egg) shows through
+        # on any monitor not covered by hyprpaper; disable_hyprland_logo alone
+        # doesn't always suppress it.
+        force_default_wallpaper = 0;
       };
 
       bind = [
@@ -329,6 +341,27 @@ in
       bindm = [
         "SUPER, mouse:272, movewindow"
         "SUPER, mouse:273, resizewindow"
+      ];
+    };
+  };
+
+  # Wallpaper daemon. Monitor names match wayland.windowManager.hyprland.monitor
+  # above: DP-2 is the Samsung Odyssey, HDMI-A-1 is the Dell U2412M. Both images
+  # live inside the flake as Nix path literals so they get copied into the store
+  # at eval time — no $HOME or absolute path leakage. The block form for
+  # `wallpaper` is required by hyprpaper ≥0.8; the legacy `wallpaper = MON,PATH`
+  # line is silently dropped by the new hyprlang special-category parser.
+  services.hyprpaper = {
+    enable = true;
+    settings = {
+      splash = false;
+      preload = [
+        "${./assets/wallpaper_samsung.jpg}"
+        "${./assets/wallpaper_dell.jpg}"
+      ];
+      wallpaper = [
+        { monitor = "DP-2";      path = "${./assets/wallpaper_samsung.jpg}"; }
+        { monitor = "HDMI-A-1";  path = "${./assets/wallpaper_dell.jpg}"; }
       ];
     };
   };
