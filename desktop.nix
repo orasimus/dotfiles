@@ -43,6 +43,9 @@
       default = [ "gtk" ];
       "org.freedesktop.impl.portal.Screenshot" = [ "hyprland" ];
       "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
+      # Pin GlobalShortcuts explicitly; otherwise xdg-desktop-portal falls back
+      # to the deprecated UseIn metadata key and logs a warning each session.
+      "org.freedesktop.impl.portal.GlobalShortcuts" = [ "hyprland" ];
     };
   };
 
