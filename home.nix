@@ -30,13 +30,13 @@ in
   home.homeDirectory = "/home/otso";
   home.stateVersion = "25.11";  # original install version — do not bump, independent of system.stateVersion
 
-  # user-level packages (as opposed to system-wide)
+  # user-level packages (as opposed to system-wide). Packages with declarative
+  # config live under programs.* below (fuzzel, mpv, btop, tealdeer, nnn,
+  # ripgrep) — they're installed implicitly by their respective modules.
   home.packages = with pkgs; [
     claude-code
     discord
-    fuzzel
     heroic
-    mpv
     sublime-merge
     spotify
     qbittorrent
@@ -93,6 +93,98 @@ in
     enable = true;
     enableFishIntegration = true;
   };
+
+  # App launcher — SUPER+D in Hyprland. Catppuccin Mocha to match kitty.
+  programs.fuzzel = {
+    enable = true;
+    settings = {
+      main = {
+        terminal = "kitty";
+        layer = "overlay";
+        font = "Comic Mono:size=12";
+      };
+      colors = {
+        background = "1e1e2eff";
+        text = "cdd6f4ff";
+        match = "f5c2e7ff";
+        selection = "585b70ff";
+        selection-text = "cdd6f4ff";
+        selection-match = "f5c2e7ff";
+        border = "b4befeff";
+      };
+      border = {
+        width = 2;
+        radius = 4;
+      };
+    };
+  };
+
+  programs.mpv.enable = true;
+
+  programs.btop = {
+    enable = true;
+    settings = {
+      color_theme = "catppuccin_mocha";
+      theme_background = false;
+      vim_keys = true;
+      update_ms = 1500;
+    };
+  };
+  # btop reads themes from $XDG_CONFIG_HOME/btop/themes/<name>.theme. Drop the
+  # Catppuccin Mocha palette in there so color_theme above resolves.
+  xdg.configFile."btop/themes/catppuccin_mocha.theme".text = ''
+    theme[main_bg]="#1e1e2e"
+    theme[main_fg]="#cdd6f4"
+    theme[title]="#cdd6f4"
+    theme[hi_fg]="#f5c2e7"
+    theme[selected_bg]="#585b70"
+    theme[selected_fg]="#f5c2e7"
+    theme[inactive_fg]="#7f849c"
+    theme[graph_text]="#f5e0dc"
+    theme[meter_bg]="#45475a"
+    theme[proc_misc]="#f5e0dc"
+    theme[cpu_box]="#cba6f7"
+    theme[mem_box]="#a6e3a1"
+    theme[net_box]="#eba0ac"
+    theme[proc_box]="#89b4fa"
+    theme[div_line]="#7f849c"
+    theme[temp_start]="#a6e3a1"
+    theme[temp_mid]="#f9e2af"
+    theme[temp_end]="#f38ba8"
+    theme[cpu_start]="#94e2d5"
+    theme[cpu_mid]="#89dceb"
+    theme[cpu_end]="#b4befe"
+    theme[free_start]="#cba6f7"
+    theme[free_mid]="#b4befe"
+    theme[free_end]="#89b4fa"
+    theme[cached_start]="#89dceb"
+    theme[cached_mid]="#74c7ec"
+    theme[cached_end]="#89b4fa"
+    theme[available_start]="#f9e2af"
+    theme[available_mid]="#fab387"
+    theme[available_end]="#eba0ac"
+    theme[used_start]="#a6e3a1"
+    theme[used_mid]="#94e2d5"
+    theme[used_end]="#74c7ec"
+    theme[download_start]="#89b4fa"
+    theme[download_mid]="#cba6f7"
+    theme[download_end]="#f5c2e7"
+    theme[upload_start]="#a6e3a1"
+    theme[upload_mid]="#94e2d5"
+    theme[upload_end]="#74c7ec"
+    theme[process_start]="#74c7ec"
+    theme[process_mid]="#cba6f7"
+    theme[process_end]="#f5c2e7"
+  '';
+
+  programs.tealdeer = {
+    enable = true;
+    settings.updates.auto_update = true;
+  };
+
+  programs.nnn.enable = true;
+
+  programs.ripgrep.enable = true;
 
   programs.kitty = {
     enable = true;

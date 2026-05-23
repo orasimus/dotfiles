@@ -136,16 +136,13 @@
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
-  # eza, bat, zoxide, fzf live in home-manager (home.nix) so they get fish
-  # integration (aliases, key bindings) declaratively. Tools below stay
-  # system-scoped because they're useful to root too and need no shell wiring.
+  # Most CLI tools live under home-manager programs.* in home.nix (declarative
+  # config, theming, fish integration). Only fd and jq remain system-scoped:
+  # neither has a home-manager module that adds anything, and both are handy
+  # to have available to root too.
   environment.systemPackages = with pkgs; [
-    btop
     fd
     jq
-    nnn
-    ripgrep
-    tldr
   ];
 
   # Pinned to install version; independent of home.stateVersion. See

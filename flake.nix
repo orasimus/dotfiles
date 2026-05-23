@@ -27,6 +27,10 @@
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
+          # On activation, rename any pre-existing unmanaged file at a path HM
+          # wants to own to <name>.hm-backup instead of failing the unit. Lets
+          # us migrate live app configs into programs.* without manual cleanup.
+          home-manager.backupFileExtension = "hm-backup";
           home-manager.extraSpecialArgs = { inherit peon-ping; };
           home-manager.users.otso = import ./home.nix;
         }
