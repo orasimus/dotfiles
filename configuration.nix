@@ -29,6 +29,24 @@
   # No cellular modems on this host — NM pulls ModemManager in by default; opt out.
   networking.modemmanager.enable = false;
 
+  # Don't block boot on DHCP/association. wg-quick-nordlynx orders After=
+  # network-online.target, but waiting for the target to actually fire costs
+  # ~5s on this host. The kill switch (vpn.nix) protects against early traffic
+  # leaks during the gap, so reaching graphical.target sooner is a free win.
+  #
+  # Failure mode to know about: on a slow link where WiFi association takes
+  # longer than wg-quick's interface-setup, the VPN unit can start before the
+  # interface is associated and fail. The kill switch then blocks all traffic
+  # until you `systemctl restart wg-quick-nordlynx`. If this ever bites, two
+  # fixes — pick one:
+  #   a) Cap the original wait at 5s instead of disabling:
+  #        systemd.services.NetworkManager-wait-online.serviceConfig.ExecStart =
+  #          [ "" "${pkgs.networkmanager}/bin/nm-online -s -q --timeout=5" ];
+  #   b) Order wg-quick after the WiFi device itself:
+  #        systemd.services.wg-quick-nordlynx.after =
+  #          [ "sys-subsystem-net-devices-wlp5s0.device" ];
+  systemd.services.NetworkManager-wait-online.enable = false;
+
   # Declarative WiFi via NetworkManager keyfile profiles. The PSK is kept
   # out of the world-readable nix store: `$WIFI_HOME_PSK` is substituted
   # at activation time from /etc/nm-secrets.env (root:root 0400), which
