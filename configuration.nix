@@ -26,6 +26,8 @@
 
   networking.hostName = "markeeg";
   networking.networkmanager.enable = true;
+  # No cellular modems on this host — NM pulls ModemManager in by default; opt out.
+  networking.modemmanager.enable = false;
 
   # Declarative WiFi via NetworkManager keyfile profiles. The PSK is kept
   # out of the world-readable nix store: `$WIFI_HOME_PSK` is substituted
