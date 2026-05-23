@@ -25,7 +25,10 @@ let
   '';
 in
 {
-  imports = [ peon-ping.homeManagerModules.default ];
+  imports = [
+    peon-ping.homeManagerModules.default
+    ./kello.nix
+  ];
   home.username = "otso";
   home.homeDirectory = "/home/otso";
   home.stateVersion = "25.11";  # original install version — do not bump, independent of system.stateVersion
