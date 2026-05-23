@@ -61,8 +61,9 @@
   # Select internationalisation properties.
   i18n.defaultLocale = "en_NZ.UTF-8";
 
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
+  # No physical printer on this host. GTK/Qt "Print → Save as PDF" uses
+  # toolkit-internal file backends and does not need cupsd.
+  services.printing.enable = false;
 
   # Firmware updates via LVFS (UEFI, SSD, dock, etc.). Run `fwupdmgr refresh`
   # then `fwupdmgr update` manually when you want to apply.
