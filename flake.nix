@@ -8,7 +8,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     peon-ping = {
-      url = "github:PeonPing/peon-ping";
+      url = "path:/home/otso/Projects/peon-ping";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

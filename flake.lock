@@ -62,17 +62,14 @@
         ]
       },
       "locked": {
-        "lastModified": 1778691251,
-        "narHash": "sha256-SXbwj8tlWbATrnQ1SCEafz2sxY0cQWyjkpLEzjFs960=",
-        "owner": "PeonPing",
-        "repo": "peon-ping",
-        "rev": "c4b6fade37f1e086da62b416cb7ad5fb9cfc0cd0",
-        "type": "github"
+        "lastModified": 1779259198,
+        "narHash": "sha256-V9lVsBC2XfzI/PkPuQxiQXcDzPoRTTAMfOBNKJ9eY58=",
+        "path": "/home/otso/Projects/peon-ping",
+        "type": "path"
       },
       "original": {
-        "owner": "PeonPing",
-        "repo": "peon-ping",
-        "type": "github"
+        "path": "/home/otso/Projects/peon-ping",
+        "type": "path"
       }
     },
     "root": {
