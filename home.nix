@@ -39,125 +39,12 @@ in
   home.packages = with pkgs; [
     chafa
     heroic
-    sublime-merge
-    spotify
     qbittorrent
+    spotify
+    sublime-merge
   ];
 
-  programs.discord.enable = true;
-  programs.zapzap.enable = true;
-
-  programs.claude-code = {
-    enable = true;
-    mcpServers = {
-      nixos = {
-        command = "${pkgs.mcp-nixos}/bin/mcp-nixos";
-        type = "stdio";
-      };
-    };
-  };
-
-  # Soft-lock ~/.claude/settings.json: strip any top-level key Claude Code
-  # added on its own (plugin installs, marketplace registrations, UI prefs
-  # persisted via /config) so the file converges back to what we declare.
-  # Runs after peon-ping's own activation, which merges its hooks into the
-  # same file. Whitelist = only `hooks`; broaden if you start declaring
-  # other keys here. Delete this whole block once peon-ping registers its
-  # hooks via `programs.claude-code.settings.hooks` instead of a mutable
-  # activation script, at which point home-manager can own settings.json
-  # directly as a read-only /nix/store symlink.
-  home.activation.claudeCodeSettingsSoftLock = config.lib.dag.entryAfter [ "peonPingClaudeCodeHooks" ] ''
-    ${pkgs.python3}/bin/python3 ${pkgs.writeText "claude-soft-lock.py" ''
-      import json, pathlib, sys
-      allowed = {"hooks"}
-      path = pathlib.Path(sys.argv[1])
-      if not path.exists(): sys.exit(0)
-      data = json.loads(path.read_text())
-      stripped = sorted(k for k in data if k not in allowed)
-      if not stripped: sys.exit(0)
-      for k in stripped: del data[k]
-      path.write_text(json.dumps(data, indent=2) + "\n")
-      print(f"claude-code soft-lock: stripped {stripped}", file=sys.stderr)
-    ''} "$HOME/.claude/settings.json"
-  '';
-
-  programs.peon-ping = {
-    enable = true;
-    package = peon-ping.packages.x86_64-linux.default;
-    claudeCodeIntegration = true;
-    settings = {
-      default_pack = "peon";
-      volume = 0.7;
-      enabled = true;
-      # No desktop-notification daemon is running on this host (Hyprland is
-      # bar-less and notification-less by design), so the popup channel would
-      # silently drop. Audio still fires.
-      desktop_notifications = false;
-    };
-    installPacks = [ "peon" ];
-  };
-
-  programs.helix = {
-    enable = true;
-    settings = {
-      theme = "catppuccin_mocha";
-      editor.soft-wrap.enable = true;
-    };
-  };
-
-  programs.starship.enable = true;
-
-  # Modern CLI tools — moved here from environment.systemPackages so fish
-  # integration (aliases, key bindings) is wired declaratively.
-  programs.eza = {
-    enable = true;
-    enableFishIntegration = true;
-    icons = "auto";
-    git = true;
-    extraOptions = [ "--group-directories-first" ];
-  };
-
   programs.bat.enable = true;
-
-  programs.zoxide = {
-    enable = true;
-    enableFishIntegration = true;
-    # `--cmd cd` reuses the `cd` name for zoxide: frecency jumps for short
-    # names, normal cd semantics for absolute paths, `cd -`, `cd ..`, etc.
-    options = [ "--cmd" "cd" ];
-  };
-
-  programs.fzf = {
-    enable = true;
-    enableFishIntegration = true;
-  };
-
-  # App launcher — SUPER+D in Hyprland. Catppuccin Mocha to match kitty.
-  programs.fuzzel = {
-    enable = true;
-    settings = {
-      main = {
-        terminal = "kitty";
-        layer = "overlay";
-        font = "Comic Mono:size=12";
-      };
-      colors = {
-        background = "1e1e2eff";
-        text = "cdd6f4ff";
-        match = "f5c2e7ff";
-        selection = "585b70ff";
-        selection-text = "cdd6f4ff";
-        selection-match = "f5c2e7ff";
-        border = "b4befeff";
-      };
-      border = {
-        width = 2;
-        radius = 4;
-      };
-    };
-  };
-
-  programs.mpv.enable = true;
 
   programs.btop = {
     enable = true;
@@ -215,14 +102,141 @@ in
     theme[process_end]="#f5c2e7"
   '';
 
-  programs.tealdeer = {
+  programs.claude-code = {
     enable = true;
-    settings.updates.auto_update = true;
+    mcpServers = {
+      nixos = {
+        command = "${pkgs.mcp-nixos}/bin/mcp-nixos";
+        type = "stdio";
+      };
+    };
   };
 
-  programs.nnn.enable = true;
+  # Soft-lock ~/.claude/settings.json: strip any top-level key Claude Code
+  # added on its own (plugin installs, marketplace registrations, UI prefs
+  # persisted via /config) so the file converges back to what we declare.
+  # Runs after peon-ping's own activation, which merges its hooks into the
+  # same file. Whitelist = only `hooks`; broaden if you start declaring
+  # other keys here. Delete this whole block once peon-ping registers its
+  # hooks via `programs.claude-code.settings.hooks` instead of a mutable
+  # activation script, at which point home-manager can own settings.json
+  # directly as a read-only /nix/store symlink.
+  home.activation.claudeCodeSettingsSoftLock = config.lib.dag.entryAfter [ "peonPingClaudeCodeHooks" ] ''
+    ${pkgs.python3}/bin/python3 ${pkgs.writeText "claude-soft-lock.py" ''
+      import json, pathlib, sys
+      allowed = {"hooks"}
+      path = pathlib.Path(sys.argv[1])
+      if not path.exists(): sys.exit(0)
+      data = json.loads(path.read_text())
+      stripped = sorted(k for k in data if k not in allowed)
+      if not stripped: sys.exit(0)
+      for k in stripped: del data[k]
+      path.write_text(json.dumps(data, indent=2) + "\n")
+      print(f"claude-code soft-lock: stripped {stripped}", file=sys.stderr)
+    ''} "$HOME/.claude/settings.json"
+  '';
 
-  programs.ripgrep.enable = true;
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+  };
+
+  programs.discord.enable = true;
+
+  programs.eza = {
+    enable = true;
+    enableFishIntegration = true;
+    icons = "auto";
+    git = true;
+    extraOptions = [ "--group-directories-first" ];
+  };
+
+  programs.fish = {
+    enable = true;
+    shellAliases = {
+      asenna = "sudo nixos-rebuild switch --flake ~/.dotfiles#markeeg";
+      cat = "bat";
+    };
+    functions.fish_greeting = "";
+  };
+
+  # App launcher — SUPER+D in Hyprland. Catppuccin Mocha to match kitty.
+  programs.fuzzel = {
+    enable = true;
+    settings = {
+      main = {
+        terminal = "kitty";
+        layer = "overlay";
+        font = "Comic Mono:size=12";
+      };
+      colors = {
+        background = "1e1e2eff";
+        text = "cdd6f4ff";
+        match = "f5c2e7ff";
+        selection = "585b70ff";
+        selection-text = "cdd6f4ff";
+        selection-match = "f5c2e7ff";
+        border = "b4befeff";
+      };
+      border = {
+        width = 2;
+        radius = 4;
+      };
+    };
+  };
+
+  programs.fzf = {
+    enable = true;
+    enableFishIntegration = true;
+  };
+
+  programs.git = {
+    enable = true;
+    settings = {
+      user = {
+        name = "Otso Rasimus";
+        email = "orasimus@gmail.com";
+      };
+      core.editor = "hx";
+      init.defaultBranch = "main";
+      push.autoSetupRemote = true;
+    };
+  };
+
+  programs.helix = {
+    enable = true;
+    settings = {
+      theme = "catppuccin_mocha";
+      editor.soft-wrap.enable = true;
+    };
+  };
+
+  # Lockscreen — plain black background, password input centred. Expand later.
+  programs.hyprlock = {
+    enable = true;
+    settings = {
+      general = {
+        hide_cursor = true;
+      };
+      background = [
+        {
+          monitor = "";
+          color = "rgba(0, 0, 0, 1.0)";
+        }
+      ];
+      input-field = [
+        {
+          monitor = "";
+          size = "20%, 5%";
+          position = "0, -20";
+          halign = "center";
+          valign = "center";
+          fade_on_empty = false;
+          placeholder_text = "Password";
+        }
+      ];
+    };
+  };
 
   programs.kitty = {
     enable = true;
@@ -250,33 +264,6 @@ in
     };
   };
 
-  programs.delta = {
-    enable = true;
-    enableGitIntegration = true;
-  };
-
-  programs.git = {
-    enable = true;
-    settings = {
-      user = {
-        name = "Otso Rasimus";
-        email = "orasimus@gmail.com";
-      };
-      core.editor = "hx";
-      init.defaultBranch = "main";
-      push.autoSetupRemote = true;
-    };
-  };
-
-  programs.fish = {
-    enable = true;
-    shellAliases = {
-      asenna = "sudo nixos-rebuild switch --flake ~/.dotfiles#markeeg";
-      cat = "bat";
-    };
-    functions.fish_greeting = "";
-  };
-
   xdg.desktopEntries.nixi = {
     name = "nixi";
     exec = "kitty --session ${config.home.homeDirectory}/.config/kitty/dotfiles.session";
@@ -290,6 +277,89 @@ in
     launch --cwd ${config.home.homeDirectory}/.dotfiles --location=vsplit hx .
     launch --cwd ${config.home.homeDirectory}/.dotfiles --location=hsplit --var role=asenna
   '';
+
+  programs.mpv.enable = true;
+
+  programs.nnn.enable = true;
+
+  programs.peon-ping = {
+    enable = true;
+    package = peon-ping.packages.x86_64-linux.default;
+    claudeCodeIntegration = true;
+    settings = {
+      default_pack = "peon";
+      volume = 0.7;
+      enabled = true;
+      # No desktop-notification daemon is running on this host (Hyprland is
+      # bar-less and notification-less by design), so the popup channel would
+      # silently drop. Audio still fires.
+      desktop_notifications = false;
+    };
+    installPacks = [ "peon" ];
+  };
+
+  programs.ripgrep.enable = true;
+
+  programs.starship.enable = true;
+
+  programs.tealdeer = {
+    enable = true;
+    settings.updates.auto_update = true;
+  };
+
+  programs.zapzap.enable = true;
+
+  programs.zoxide = {
+    enable = true;
+    enableFishIntegration = true;
+    # `--cmd cd` reuses the `cd` name for zoxide: frecency jumps for short
+    # names, normal cd semantics for absolute paths, `cd -`, `cd ..`, etc.
+    options = [ "--cmd" "cd" ];
+  };
+
+  # Idle handling: blank the display after 5 min (matches the previous
+  # powerdevilrc behaviour). No auto-lock — Super+L locks manually.
+  services.hypridle = {
+    enable = true;
+    settings = {
+      listener = [
+        {
+          # On lockscreen: blank display after 1 min of idle.
+          # pidof check makes this a no-op during normal (unlocked) use.
+          timeout = 60;
+          on-timeout = "pidof hyprlock && hyprctl dispatch dpms off";
+          on-resume = "hyprctl dispatch dpms on";
+        }
+        {
+          # Normal use: blank display after 5 min of idle.
+          timeout = 300;
+          on-timeout = "hyprctl dispatch dpms off";
+          on-resume = "hyprctl dispatch dpms on";
+        }
+      ];
+    };
+  };
+
+  # Wallpaper daemon. Monitor names match wayland.windowManager.hyprland.monitor
+  # below: DP-2 is the Samsung Odyssey, HDMI-A-1 is the Dell U2412M. Both images
+  # live inside the flake as Nix path literals so they get copied into the store
+  # at eval time — no $HOME or absolute path leakage. The block form for
+  # `wallpaper` is required by hyprpaper ≥0.8; the legacy `wallpaper = MON,PATH`
+  # line is silently dropped by the new hyprlang special-category parser.
+  services.hyprpaper = {
+    enable = true;
+    settings = {
+      splash = false;
+      preload = [
+        "${./assets/wallpaper_samsung.jpg}"
+        "${./assets/wallpaper_dell.jpg}"
+      ];
+      wallpaper = [
+        { monitor = "DP-2";      path = "${./assets/wallpaper_samsung.jpg}"; }
+        { monitor = "HDMI-A-1";  path = "${./assets/wallpaper_dell.jpg}"; }
+      ];
+    };
+  };
 
   # Hyprland compositor. systemd integration off — UWSM (enabled at the system
   # level via programs.hyprland.withUWSM) owns the hyprland-session.target, and
@@ -384,77 +454,6 @@ in
       bindm = [
         "SUPER, mouse:272, movewindow"
         "SUPER, mouse:273, resizewindow"
-      ];
-    };
-  };
-
-  # Wallpaper daemon. Monitor names match wayland.windowManager.hyprland.monitor
-  # above: DP-2 is the Samsung Odyssey, HDMI-A-1 is the Dell U2412M. Both images
-  # live inside the flake as Nix path literals so they get copied into the store
-  # at eval time — no $HOME or absolute path leakage. The block form for
-  # `wallpaper` is required by hyprpaper ≥0.8; the legacy `wallpaper = MON,PATH`
-  # line is silently dropped by the new hyprlang special-category parser.
-  services.hyprpaper = {
-    enable = true;
-    settings = {
-      splash = false;
-      preload = [
-        "${./assets/wallpaper_samsung.jpg}"
-        "${./assets/wallpaper_dell.jpg}"
-      ];
-      wallpaper = [
-        { monitor = "DP-2";      path = "${./assets/wallpaper_samsung.jpg}"; }
-        { monitor = "HDMI-A-1";  path = "${./assets/wallpaper_dell.jpg}"; }
-      ];
-    };
-  };
-
-  # Idle handling: blank the display after 5 min (matches the previous
-  # powerdevilrc behaviour). No auto-lock — Super+L locks manually.
-  services.hypridle = {
-    enable = true;
-    settings = {
-      listener = [
-        {
-          # On lockscreen: blank display after 1 min of idle.
-          # pidof check makes this a no-op during normal (unlocked) use.
-          timeout = 60;
-          on-timeout = "pidof hyprlock && hyprctl dispatch dpms off";
-          on-resume = "hyprctl dispatch dpms on";
-        }
-        {
-          # Normal use: blank display after 5 min of idle.
-          timeout = 300;
-          on-timeout = "hyprctl dispatch dpms off";
-          on-resume = "hyprctl dispatch dpms on";
-        }
-      ];
-    };
-  };
-
-  # Lockscreen — plain black background, password input centred. Expand later.
-  programs.hyprlock = {
-    enable = true;
-    settings = {
-      general = {
-        hide_cursor = true;
-      };
-      background = [
-        {
-          monitor = "";
-          color = "rgba(0, 0, 0, 1.0)";
-        }
-      ];
-      input-field = [
-        {
-          monitor = "";
-          size = "20%, 5%";
-          position = "0, -20";
-          halign = "center";
-          valign = "center";
-          fade_on_empty = false;
-          placeholder_text = "Password";
-        }
       ];
     };
   };
