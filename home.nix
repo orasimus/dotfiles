@@ -38,7 +38,6 @@ in
   # ripgrep) — they're installed implicitly by their respective modules.
   home.packages = with pkgs; [
     chafa
-    claude-code
     discord
     heroic
     sublime-merge
@@ -46,6 +45,40 @@ in
     qbittorrent
     zapzap
   ];
+
+  programs.claude-code = {
+    enable = true;
+    mcpServers = {
+      nixos = {
+        command = "${pkgs.mcp-nixos}/bin/mcp-nixos";
+        type = "stdio";
+      };
+    };
+  };
+
+  # Soft-lock ~/.claude/settings.json: strip any top-level key Claude Code
+  # added on its own (plugin installs, marketplace registrations, UI prefs
+  # persisted via /config) so the file converges back to what we declare.
+  # Runs after peon-ping's own activation, which merges its hooks into the
+  # same file. Whitelist = only `hooks`; broaden if you start declaring
+  # other keys here. Delete this whole block once peon-ping registers its
+  # hooks via `programs.claude-code.settings.hooks` instead of a mutable
+  # activation script, at which point home-manager can own settings.json
+  # directly as a read-only /nix/store symlink.
+  home.activation.claudeCodeSettingsSoftLock = config.lib.dag.entryAfter [ "peonPingClaudeCodeHooks" ] ''
+    ${pkgs.python3}/bin/python3 ${pkgs.writeText "claude-soft-lock.py" ''
+      import json, pathlib, sys
+      allowed = {"hooks"}
+      path = pathlib.Path(sys.argv[1])
+      if not path.exists(): sys.exit(0)
+      data = json.loads(path.read_text())
+      stripped = sorted(k for k in data if k not in allowed)
+      if not stripped: sys.exit(0)
+      for k in stripped: del data[k]
+      path.write_text(json.dumps(data, indent=2) + "\n")
+      print(f"claude-code soft-lock: stripped {stripped}", file=sys.stderr)
+    ''} "$HOME/.claude/settings.json"
+  '';
 
   programs.peon-ping = {
     enable = true;
