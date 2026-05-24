@@ -1,8 +1,5 @@
 { pkgs, ... }:
 let
-  # Finnish piper TTS voice. The .onnx model and its .json config must sit in
-  # the same directory at runtime (piper derives the json path from the model
-  # path), so wrap both fetchurl results in a single store dir via symlinks.
   harriVoice = let
     onnx = pkgs.fetchurl {
       url = "https://huggingface.co/rhasspy/piper-voices/resolve/main/fi/fi_FI/harri/medium/fi_FI-harri-medium.onnx";
@@ -18,14 +15,19 @@ let
     ln -s ${json} $out/fi_FI-harri-medium.onnx.json
   '';
 
-  # Speak the current 24h wall-clock time in Finnish through piper. Hours read
-  # as a single number (18 → "kahdeksantoista"); minutes also as a number, but
-  # single-digit minutes get a "nolla" prefix to mirror how a digital readout
-  # is spoken aloud (18:05 → "kahdeksantoista nolla viisi"). Tens 20-50 are
-  # split from the ones with a space (35 → "kolmekymmentä viisi").
+  harriSpeak = pkgs.writeShellApplication {
+    name = "harri-speak";
+    runtimeInputs = with pkgs; [ piper-tts alsa-utils ];
+    text = ''
+      printf '%s\n' "$*" \
+        | piper --model ${harriVoice}/fi_FI-harri-medium.onnx --output_raw 2>/dev/null \
+        | aplay -q -r 22050 -f S16_LE -t raw -
+    '';
+  };
+
   kello = pkgs.writeShellApplication {
     name = "kello";
-    runtimeInputs = with pkgs; [ piper-tts alsa-utils coreutils ];
+    runtimeInputs = with pkgs; [ coreutils ];
     text = ''
       ones=( [0]="nolla" [1]="yksi" [2]="kaksi" [3]="kolme" [4]="neljä"
              [5]="viisi" [6]="kuusi" [7]="seitsemän" [8]="kahdeksan" [9]="yhdeksän" )
@@ -62,16 +64,43 @@ let
         min_words=$(say_number "$m")
       fi
 
-      text="Kello on $hour_word $min_words"
+      ${harriSpeak}/bin/harri-speak "Kello on $hour_word $min_words"
+    '';
+  };
 
-      printf '%s\n' "$text" \
-        | piper --model ${harriVoice}/fi_FI-harri-medium.onnx --output_raw 2>/dev/null \
-        | aplay -q -r 22050 -f S16_LE -t raw -
+  muista = pkgs.writeShellApplication {
+    name = "muista";
+    runtimeInputs = with pkgs; [ systemd coreutils ];
+    text = ''
+      if [[ $# -lt 2 ]]; then
+        echo "Käyttö: muista HH:MM viesti" >&2
+        exit 1
+      fi
+
+      time_arg="$1"
+      shift
+      text="$*"
+
+      ts=$(date -d "today $time_arg" "+%Y-%m-%d %H:%M:%S") || {
+        echo "muista: virheellinen aika '$time_arg'" >&2
+        exit 1
+      }
+
+      if (( $(date -d "$ts" +%s) <= $(date +%s) )); then
+        echo "muista: $time_arg on jo mennyt" >&2
+        exit 1
+      fi
+
+      systemd-run --user \
+        --description="Muistutus: $text" \
+        --on-calendar="$ts" \
+        --timer-property=RemainAfterElapse=no \
+        ${harriSpeak}/bin/harri-speak "$text"
     '';
   };
 in
 {
-  home.packages = [ kello ];
+  home.packages = [ kello muista ];
 
   wayland.windowManager.hyprland.settings.bind = [
     "SUPER, T, exec, kello"

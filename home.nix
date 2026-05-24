@@ -27,7 +27,7 @@ in
 {
   imports = [
     peon-ping.homeManagerModules.default
-    ./kello.nix
+    ./harri.nix
   ];
   home.username = "otso";
   home.homeDirectory = "/home/otso";
