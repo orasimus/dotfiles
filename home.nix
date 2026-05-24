@@ -38,13 +38,14 @@ in
   # ripgrep) — they're installed implicitly by their respective modules.
   home.packages = with pkgs; [
     chafa
-    discord
     heroic
     sublime-merge
     spotify
     qbittorrent
-    zapzap
   ];
+
+  programs.discord.enable = true;
+  programs.zapzap.enable = true;
 
   programs.claude-code = {
     enable = true;
