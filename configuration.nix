@@ -11,6 +11,7 @@
     ./desktop.nix
     ./fonts.nix
     ./firefox.nix
+    # ./samba.nix
   ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
