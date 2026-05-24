@@ -37,6 +37,7 @@ in
   # config live under programs.* below (fuzzel, mpv, btop, tealdeer, nnn,
   # ripgrep) — they're installed implicitly by their respective modules.
   home.packages = with pkgs; [
+    chafa
     claude-code
     discord
     heroic
