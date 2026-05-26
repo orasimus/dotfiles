@@ -29,19 +29,26 @@
         # of whatever the default registry points at (typically stale).
         { nix.registry.nixpkgs.flake = nixpkgs; }
         home-manager.nixosModules.home-manager
-        {
+        ({ pkgs, ... }: {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
-          # On activation, rename any pre-existing unmanaged file at a path HM
-          # wants to own to <name>.hm-backup instead of failing the unit. Lets
-          # us migrate live app configs into programs.* without manual cleanup.
-          home-manager.backupFileExtension = "hm-backup";
+          # On activation, delete any pre-existing unmanaged file at a path HM
+          # wants to own. The previous backupFileExtension = "hm-backup"
+          # approach broke under impermanence: persisted dirs like
+          # ~/.config/discord replayed both the app's settings.json and an old
+          # .hm-backup on every boot, so the next activation's `mv settings.json
+          # settings.json.hm-backup` refused to clobber and aborted the whole
+          # unit — taking every HM symlink (hyprland.conf, btop, fuzzel, …)
+          # down with it. `rm -f` only fires on real files that differ from
+          # HM's intended content (identical files are skipped quietly), so
+          # this only ever discards content HM was about to overwrite anyway.
+          home-manager.backupCommand = "${pkgs.coreutils}/bin/rm -f";
           # impermanence's NixOS module (already in modules above) auto-imports
           # the home-manager-side bits into every HM user when home-manager is
           # used as a NixOS module, so `home.persistence` becomes available
           # inside home.nix without any sharedModules wiring here.
           home-manager.users.otso = import ./home.nix;
-        }
+        })
       ];
     };
   };
