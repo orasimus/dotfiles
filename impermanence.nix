@@ -1,24 +1,38 @@
 # Impermanence: on every boot the `@root` btrfs subvolume is rolled back to
-# the empty `@root_blank` snapshot, then `environment.persistence."/persist"`
+# the empty `@root-blank` snapshot, then `environment.persistence."/persist"`
 # below bind-mounts the declared system paths from `/persist` back into place.
 # `/nix`, `/persist`, `/var/log`, and `/boot` are independent subvolumes /
 # partitions and are unaffected by the wipe.
 #
 # Prerequisites before the first switch + reboot under this config:
-#   1) The `@root_blank` subvolume must exist:
+#   1) The `@root-blank` subvolume must exist (must match the name used in
+#      the rollback script below — historically a typo here left the system
+#      with no @root after the first rollback):
 #        sudo mount -o subvol=/ /dev/nvme0n1p2 /mnt/btrfs
-#        sudo btrfs subvolume create /mnt/btrfs/@root_blank
+#        sudo btrfs subvolume create /mnt/btrfs/@root-blank
 #        sudo umount /mnt/btrfs
 #      (It is intentionally empty — every reboot snapshots this over @root.)
-#   2) Any files that already live on `@root` and need to survive the first
-#      wipe must be relocated under `/persist/` first. In this config that
-#      currently means at least:
+#   2) Password hashes for every user with a login must be staged in
+#      /persist/passwords/ — `configuration.nix` references them via
+#      `users.users.<name>.hashedPasswordFile` and `mutableUsers = false`,
+#      which is how we avoid persisting /etc/shadow itself (it lives on
+#      the wiped @root). Generate with:
+#        mkpasswd -m sha-512  >  /persist/passwords/otso
+#        mkpasswd -m sha-512  >  /persist/passwords/root
+#        chmod 0600 /persist/passwords/*
+#      Activation reads these on every boot and rewrites /etc/shadow, so
+#      losing /etc/shadow to the rollback is harmless. If a file is missing
+#      at activation, that account boots with a locked password.
+#   3) Any other files that already live on `@root` and need to survive the
+#      first wipe must be relocated under `/persist/` first. In this config
+#      that currently means at least:
 #        /etc/nordlynx/private.key   → /persist/etc/nordlynx/private.key
 #        /etc/nm-secrets.env         → /persist/etc/nm-secrets.env
 #        /var/lib/{NetworkManager,bluetooth,fwupd,nixos}/ → /persist/var/lib/...
 #      The bind mounts declared below pull these back into place on subsequent
 #      boots, but the *first* boot under impermanence loses anything not yet
-#      staged in /persist.
+#      staged in /persist. See `home.persistence` in home.nix for the
+#      matching list of /home/otso paths that should be pre-seeded too.
 
 { lib, ... }:
 
@@ -41,12 +55,18 @@
     before = [ "sysroot.mount" ];
     unitConfig.DefaultDependencies = "no";
     serviceConfig.Type = "oneshot";
+    # `set -euo pipefail`: a silent failure here (e.g. the snapshot source
+    # name not matching the on-disk subvolume) is what made the first attempt
+    # at this config unbootable — @root got moved to old_roots but never
+    # recreated, and sysroot.mount had nothing to mount. Fail loudly instead.
     script = ''
+      set -euo pipefail
+
       mkdir -p /btrfs_tmp
       mount -o subvol=/ /dev/disk/by-uuid/630b3ded-5206-4369-a36e-50a6d462db9c /btrfs_tmp
+      mkdir -p /btrfs_tmp/old_roots
 
       if [[ -e /btrfs_tmp/@root ]]; then
-        mkdir -p /btrfs_tmp/old_roots
         timestamp=$(date --date="@$(stat -c %Y /btrfs_tmp/@root)" "+%Y-%m-%d_%H:%M:%S")
         mv /btrfs_tmp/@root "/btrfs_tmp/old_roots/$timestamp"
       fi
@@ -59,11 +79,11 @@
         done
         btrfs subvolume delete "$1"
       }
-      for i in $(find /btrfs_tmp/old_roots/ -maxdepth 1 -mtime +30 2>/dev/null); do
+      for i in $(find /btrfs_tmp/old_roots/ -mindepth 1 -maxdepth 1 -mtime +30); do
         delete_subvolume_recursively "$i"
       done
 
-      btrfs subvolume snapshot /btrfs_tmp/@root_blank /btrfs_tmp/@root
+      btrfs subvolume snapshot /btrfs_tmp/@root-blank /btrfs_tmp/@root
       umount /btrfs_tmp
     '';
   };

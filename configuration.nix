@@ -163,13 +163,26 @@
   # Set your time zone.
   time.timeZone = "Pacific/Auckland";
 
-  # Define a user account. Don’t forget to set a password with ‘passwd’.
+  # Impermanence-friendly user management. `/etc/shadow` lives on the wiped
+  # @root subvolume, so any imperatively-set password would vanish on the
+  # next reboot. Instead, hashes are staged once under /persist/passwords/
+  # (see impermanence.nix prerequisites) and the activation script rewrites
+  # /etc/shadow from them on every boot.
+  #
+  # `mutableUsers = false` enforces the declarative path — `passwd` still
+  # appears to work in a running session but its changes are dropped on
+  # reboot, which would be silently confusing. Better to disable it.
+  users.mutableUsers = false;
+
   users.users.otso = {
     isNormalUser = true;
     description = "otso";
     extraGroups = [ "networkmanager" "wheel" ];
     shell = pkgs.fish;
+    hashedPasswordFile = "/persist/passwords/otso";
   };
+
+  users.users.root.hashedPasswordFile = "/persist/passwords/root";
 
   # Compressed RAM swap — low-friction memory pressure relief for a desktop.
   zramSwap.enable = true;
