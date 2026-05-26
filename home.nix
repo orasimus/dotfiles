@@ -43,6 +43,67 @@ in
     sublime-merge
   ];
 
+  # Impermanence: bind-mount the listed paths from /persist/home/otso into ~
+  # on each boot. The wiped @root subvolume starts each boot empty; without
+  # these declarations the listed paths would vanish on every reboot.
+  #
+  # What's deliberately NOT here:
+  #   - ~/.cache/*           — regeneratable
+  #   - ~/.config/{btop,fish,fuzzel,git,helix,hypr,kitty,nnn,tealdeer,...}
+  #                          — all owned by home-manager, recreated as
+  #                            symlinks into /nix/store on every activation
+  #
+  # Things to be aware of:
+  #   - The bind-mount targets are created at boot by systemd mount units
+  #     before home-manager runs, so HM activation sees the persisted dirs
+  #     in place and won't try to overwrite them.
+  #   - For each path that doesn't yet exist under /persist/home/otso, the
+  #     module creates an empty owned-by-otso dir/file at first boot. Pre-seed
+  #     them before reboot if you want existing data preserved (separate
+  #     /mnt/old → /persist migration step).
+  # The key here is the persistent storage root, NOT including the user's home
+  # directory — the module prefixes ~/ to every relative entry automatically.
+  home.persistence."/persist" = {
+    directories = [
+      # personal files
+      "Documents"
+      "Downloads"
+      "Pictures"
+      "Music"
+      "Videos"
+      "Projects"
+      "Public"
+      "Games"
+      ".dotfiles"
+      ".ssh"
+
+      # app logins / state
+      ".config/discord"
+      ".local/share/Steam"
+      ".steam"
+      ".config/spotify"
+      ".config/heroic"
+      ".config/qBittorrent"
+      ".local/share/qBittorrent"
+      ".config/ZapZap"
+      ".local/share/ZapZap"
+      ".config/sublime-merge"
+      ".mozilla"
+
+      # Claude Code state (sessions, memory, plans)
+      ".claude"
+
+      # shell / runtime
+      ".local/share/fish"
+      ".local/state/wireplumber"
+    ];
+
+    files = [
+      ".claude.json"
+      ".bash_history"
+    ];
+  };
+
   programs.bat.enable = true;
 
   programs.btop = {

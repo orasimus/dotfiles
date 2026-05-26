@@ -11,6 +11,7 @@
     ./desktop.nix
     ./fonts.nix
     ./firefox.nix
+    ./impermanence.nix
     # ./samba.nix
   ];
 
