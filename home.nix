@@ -1,4 +1,4 @@
-{ config, pkgs, peon-ping, ... }:
+{ config, pkgs, ... }:
 let
   # Standard US layout with AltGr as level-3 shifter, plus ö/ä on AC10/AC11.
   # Combined with services.keyd (configuration.nix) which rewrites Ctrl+;/'
@@ -26,7 +26,6 @@ let
 in
 {
   imports = [
-    peon-ping.homeManagerModules.default
     ./harri.nix
   ];
   home.username = "otso";
@@ -111,30 +110,6 @@ in
       };
     };
   };
-
-  # Soft-lock ~/.claude/settings.json: strip any top-level key Claude Code
-  # added on its own (plugin installs, marketplace registrations, UI prefs
-  # persisted via /config) so the file converges back to what we declare.
-  # Runs after peon-ping's own activation, which merges its hooks into the
-  # same file. Whitelist = only `hooks`; broaden if you start declaring
-  # other keys here. Delete this whole block once peon-ping registers its
-  # hooks via `programs.claude-code.settings.hooks` instead of a mutable
-  # activation script, at which point home-manager can own settings.json
-  # directly as a read-only /nix/store symlink.
-  home.activation.claudeCodeSettingsSoftLock = config.lib.dag.entryAfter [ "peonPingClaudeCodeHooks" ] ''
-    ${pkgs.python3}/bin/python3 ${pkgs.writeText "claude-soft-lock.py" ''
-      import json, pathlib, sys
-      allowed = {"hooks"}
-      path = pathlib.Path(sys.argv[1])
-      if not path.exists(): sys.exit(0)
-      data = json.loads(path.read_text())
-      stripped = sorted(k for k in data if k not in allowed)
-      if not stripped: sys.exit(0)
-      for k in stripped: del data[k]
-      path.write_text(json.dumps(data, indent=2) + "\n")
-      print(f"claude-code soft-lock: stripped {stripped}", file=sys.stderr)
-    ''} "$HOME/.claude/settings.json"
-  '';
 
   programs.delta = {
     enable = true;
@@ -281,22 +256,6 @@ in
   programs.mpv.enable = true;
 
   programs.nnn.enable = true;
-
-  programs.peon-ping = {
-    enable = true;
-    package = peon-ping.packages.x86_64-linux.default;
-    claudeCodeIntegration = true;
-    settings = {
-      default_pack = "peon";
-      volume = 0.7;
-      enabled = true;
-      # No desktop-notification daemon is running on this host (Hyprland is
-      # bar-less and notification-less by design), so the popup channel would
-      # silently drop. Audio still fires.
-      desktop_notifications = false;
-    };
-    installPacks = [ "peon" ];
-  };
 
   programs.ripgrep.enable = true;
 

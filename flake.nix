@@ -7,13 +7,9 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    peon-ping = {
-      url = "path:/home/otso/Projects/peon-ping";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
-  outputs = { self, nixpkgs, home-manager, peon-ping }: {
+  outputs = { self, nixpkgs, home-manager }: {
     nixosConfigurations.markeeg = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
@@ -31,7 +27,6 @@
           # wants to own to <name>.hm-backup instead of failing the unit. Lets
           # us migrate live app configs into programs.* without manual cleanup.
           home-manager.backupFileExtension = "hm-backup";
-          home-manager.extraSpecialArgs = { inherit peon-ping; };
           home-manager.users.otso = import ./home.nix;
         }
       ];
