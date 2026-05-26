@@ -164,6 +164,9 @@ in
 
   programs.claude-code = {
     enable = true;
+    settings = {
+      model = "opus";
+    };
     mcpServers = {
       nixos = {
         command = "${pkgs.mcp-nixos}/bin/mcp-nixos";
