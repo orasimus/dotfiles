@@ -88,7 +88,7 @@ in
       ".config/ZapZap"
       ".local/share/ZapZap"
       ".config/sublime-merge"
-      ".mozilla"
+      ".config/mozilla/firefox"
 
       # Claude Code state (sessions, memory, plans)
       ".claude"
