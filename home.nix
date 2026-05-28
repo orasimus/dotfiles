@@ -92,6 +92,8 @@ in
 
       # Claude Code state (sessions, memory, plans)
       ".claude"
+      # Codex state (sessions, memory, rules)
+      ".codex"
 
       # shell / runtime
       ".local/share/fish"
@@ -164,15 +166,15 @@ in
 
   programs.claude-code = {
     enable = true;
+    enableMcpIntegration = true;
     settings = {
       model = "opus";
     };
-    mcpServers = {
-      nixos = {
-        command = "${pkgs.mcp-nixos}/bin/mcp-nixos";
-        type = "stdio";
-      };
-    };
+  };
+
+  programs.codex = {
+    enable = true;
+    enableMcpIntegration = true;
   };
 
   programs.delta = {
@@ -316,6 +318,15 @@ in
     launch --cwd ${config.home.homeDirectory}/.dotfiles --location=vsplit hx .
     launch --cwd ${config.home.homeDirectory}/.dotfiles --location=hsplit --var role=asenna
   '';
+
+  programs.mcp = {
+    enable = true;
+    servers = {
+      nixos = {
+        command = "${pkgs.mcp-nixos}/bin/mcp-nixos";
+      };
+    };
+  };
 
   programs.mpv.enable = true;
 
