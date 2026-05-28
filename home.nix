@@ -97,6 +97,7 @@ in
 
       # shell / runtime
       ".local/share/fish"
+      ".local/share/direnv"  # direnv `allow` approvals — survive the root wipe
       ".local/state/wireplumber"
     ];
 
@@ -180,6 +181,12 @@ in
   programs.delta = {
     enable = true;
     enableGitIntegration = true;
+  };
+
+  programs.direnv = {
+    enable = true;
+    enableFishIntegration = true;
+    nix-direnv.enable = true;
   };
 
   programs.discord.enable = true;
