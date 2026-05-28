@@ -23,6 +23,14 @@ let
         xkb_geometry { include "pc(pc105)" };
     };
   '';
+
+  dotfilesSession = agent: ''
+    new_tab dotfiles
+    layout splits
+    launch --cwd ${config.home.homeDirectory}/.dotfiles ${agent}
+    launch --cwd ${config.home.homeDirectory}/.dotfiles --location=vsplit hx .
+    launch --cwd ${config.home.homeDirectory}/.dotfiles --location=hsplit --var role=asenna
+  '';
 in
 {
   imports = [
@@ -317,19 +325,22 @@ in
     };
   };
 
-  xdg.desktopEntries.nixi = {
-    name = "nixi";
-    exec = "kitty --session ${config.home.homeDirectory}/.config/kitty/dotfiles.session";
-    terminal = false;
+  xdg.desktopEntries = {
+    nixi-claude = {
+      name = "nixi claude";
+      exec = "kitty --session ${config.home.homeDirectory}/.config/kitty/dotfiles-claude.session";
+      terminal = false;
+    };
+
+    nixi-codex = {
+      name = "nixi codex";
+      exec = "kitty --session ${config.home.homeDirectory}/.config/kitty/dotfiles-codex.session";
+      terminal = false;
+    };
   };
 
-  xdg.configFile."kitty/dotfiles.session".text = ''
-    new_tab dotfiles
-    layout splits
-    launch --cwd ${config.home.homeDirectory}/.dotfiles claude
-    launch --cwd ${config.home.homeDirectory}/.dotfiles --location=vsplit hx .
-    launch --cwd ${config.home.homeDirectory}/.dotfiles --location=hsplit --var role=asenna
-  '';
+  xdg.configFile."kitty/dotfiles-claude.session".text = dotfilesSession "claude";
+  xdg.configFile."kitty/dotfiles-codex.session".text = dotfilesSession "codex";
 
   programs.mcp = {
     enable = true;
