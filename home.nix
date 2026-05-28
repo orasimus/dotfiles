@@ -109,6 +109,11 @@ in
 
   programs.bat.enable = true;
 
+  gtk = {
+    enable = true;
+    colorScheme = "dark";
+  };
+
   programs.btop = {
     enable = true;
     settings = {
