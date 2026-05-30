@@ -55,6 +55,41 @@ nix run github:nix-community/disko -- --mode destroy,format,mount ./disko.nix
 nixos-install --flake ~/.dotfiles#markeeg
 ```
 
+Post-install checks / one-time hardening:
+
+```
+# Confirm the LUKS2 encryption sector size was fixed at format time.
+sudo cryptsetup luksDump /dev/nvme0n1p2 | grep -i sector
+
+# Back up the LUKS header immediately. Store this somewhere that is not only
+# on the encrypted disk; header/keyslot damage can otherwise make the volume
+# unrecoverable even with the right passphrase.
+sudo cryptsetup luksHeaderBackup /dev/nvme0n1p2 \
+  --header-backup-file cryptroot-luks-header.img
+
+# Make the rollback source immutable. Disko creates @root-blank as an empty
+# writable subvolume; the impermanence reference pattern uses a read-only
+# blank snapshot. This host never mounts @root-blank, so writes are already
+# unlikely, but marking it read-only is cheap belt-and-braces.
+sudo mkdir -p /btrfs_tmp
+sudo mount -o subvol=/ /dev/mapper/cryptroot /btrfs_tmp
+sudo btrfs property set -ts /btrfs_tmp/@root-blank ro true
+sudo umount /btrfs_tmp
+
+# Confirm periodic discard is available through dm-crypt. This is expected
+# because disko sets allowDiscards=true and NixOS enables fstrim by default.
+systemctl status fstrim.timer
+```
+
+Caveat — the repo is in a transitional state until that reinstall happens:
+`configuration.nix` already imports `./hardware-luks.nix`, and `disko.nix`
+already declares `fileSystems."/" = /dev/mapper/cryptroot`. A casual
+`asenna` from a still-unencrypted boot will build a generation whose
+stage-1 looks for `/dev/mapper/cryptroot` and fail to mount root. Until
+reinstall day, point `configuration.nix` back at `./hardware-configuration.nix`
+for any rebuilds, and only swap to `./hardware-luks.nix` from installer
+media.
+
 Before committing to the reinstall, make the disk-layout decisions that would
 be painful to change later:
 
@@ -72,10 +107,13 @@ be painful to change later:
 - Filesystem choice: switching away from btrfs later means reinstall/restore.
   Tweaking subvolumes, mount options, compression, scrub/balance timers, and
   snapshot policy is incremental.
-- LUKS format shape: passphrases, recovery keys, TPM2 enrollment, FIDO2, and
-  key rotation are incremental LUKS2 keyslot changes. Changing fundamental
-  encryption parameters, detached headers, or integrity-style layouts later is
-  at least a high-risk reencrypt/restore job.
+- LUKS format shape: `disko.nix` explicitly formats with `--sector-size 4096`
+  because cryptsetup's default/autodetection can still land on 512-byte
+  encryption sectors on some 4K-capable NVMe devices. Passphrases, recovery
+  keys, TPM2 enrollment, FIDO2, and key rotation are incremental LUKS2 keyslot
+  changes. Changing fundamental encryption parameters, sector size, detached
+  headers, or integrity-style layouts later is at least a high-risk
+  reencrypt/restore job.
 
 Post-install hardening should not require another reinstall:
 
