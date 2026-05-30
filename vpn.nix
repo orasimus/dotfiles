@@ -5,7 +5,7 @@
 # `dns =` directive pushes Nord's resolver via resolvconf — without resolved
 # nothing receives that push.
 
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 let
   # Default startup endpoint for the wg-quick peer below. `vpn-hop`
@@ -42,8 +42,8 @@ in
   # api.nordvpn.com/v1/servers/recommendations with country_id=156 and
   # technology wireguard_udp; the `station` field is the endpoint IP).
   #
-  # Private key lives at /etc/nordlynx/private.key (root:root 0400) so the
-  # secret never enters the nix store or git. Regenerate via
+  # Private key is decrypted by sops-nix so the secret never enters the nix
+  # store or git. Regenerate via
   # `curl -u token:<access_token> https://api.nordvpn.com/v1/users/services/credentials`
   # whenever NordVPN rotates the credential.
   #
@@ -52,7 +52,7 @@ in
   # host-level DNS config.
   networking.wg-quick.interfaces.nordlynx = {
     address = [ "10.5.0.2/32" ];
-    privateKeyFile = "/etc/nordlynx/private.key";
+    privateKeyFile = config.sops.secrets."network/nordlynx-private.key".path;
     dns = [ "103.86.96.100" ];
     peers = [{
       publicKey = "P7Dv2WoopPHomMq6jnvwV2hnV2BnI/7LklaIUTEzSQ8=";

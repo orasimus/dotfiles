@@ -15,14 +15,19 @@
       inputs.nixpkgs.follows = "";
       inputs.home-manager.follows = "";
     };
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, home-manager, impermanence }: {
+  outputs = { self, nixpkgs, home-manager, impermanence, sops-nix }: {
     nixosConfigurations.markeeg = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
         ./configuration.nix
         impermanence.nixosModules.impermanence
+        sops-nix.nixosModules.sops
         # Pin the system's flake registry entry for `nixpkgs` to the same
         # input this configuration was built from, so ad-hoc commands like
         # `nix shell nixpkgs#foo` resolve against the locked revision instead

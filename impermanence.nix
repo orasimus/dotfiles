@@ -12,22 +12,14 @@
 #        sudo btrfs subvolume create /mnt/btrfs/@root-blank
 #        sudo umount /mnt/btrfs
 #      (It is intentionally empty — every reboot snapshots this over @root.)
-#   2) Password hashes for every user with a login must be staged in
-#      /persist/passwords/ — `configuration.nix` references them via
-#      `users.users.<name>.hashedPasswordFile` and `mutableUsers = false`,
-#      which is how we avoid persisting /etc/shadow itself (it lives on
-#      the wiped @root). Generate with:
-#        mkpasswd -m sha-512  >  /persist/passwords/otso
-#        mkpasswd -m sha-512  >  /persist/passwords/root
-#        chmod 0600 /persist/passwords/*
-#      Activation reads these on every boot and rewrites /etc/shadow, so
-#      losing /etc/shadow to the rollback is harmless. If a file is missing
-#      at activation, that account boots with a locked password.
+#   2) The sops-nix age identity must exist at
+#      /persist/var/lib/sops-nix/key.txt (root-only). Password hashes, WiFi,
+#      and VPN credentials are decrypted from secrets.yaml at activation time.
+#      `neededForUsers = true` makes the password hashes available before
+#      NixOS creates users, so losing /etc/shadow to the rollback is harmless.
 #   3) Any other files that already live on `@root` and need to survive the
 #      first wipe must be relocated under `/persist/` first. In this config
 #      that currently means at least:
-#        /etc/nordlynx/private.key   → /persist/etc/nordlynx/private.key
-#        /etc/nm-secrets.env         → /persist/etc/nm-secrets.env
 #        /var/lib/{NetworkManager,bluetooth,fwupd,nixos}/ → /persist/var/lib/...
 #      The bind mounts declared below pull these back into place on subsequent
 #      boots, but the *first* boot under impermanence loses anything not yet
@@ -118,9 +110,6 @@
       # systemd-coredump landing zone (mostly debugging convenience).
       "/var/lib/systemd/coredump"
 
-      # NordVPN WireGuard private key (referenced as a file path by
-      # networking.wg-quick.interfaces.nordlynx.privateKeyFile in vpn.nix).
-      "/etc/nordlynx"
     ];
 
     files = [
@@ -129,9 +118,6 @@
       # writes here.
       "/etc/machine-id"
 
-      # WiFi PSK substitution file, referenced by
-      # networking.networkmanager.ensureProfiles.environmentFiles.
-      "/etc/nm-secrets.env"
     ];
   };
 }

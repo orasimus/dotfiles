@@ -1,0 +1,24 @@
+{ ... }:
+
+{
+  # One age identity is the only reinstall-time bootstrap secret. Keep it on
+  # /persist so the wiped root never owns the decryption key.
+  sops.defaultSopsFile = ./secrets.yaml;
+  sops.age.keyFile = "/persist/var/lib/sops-nix/key.txt";
+
+  sops.secrets."passwords/otso" = {
+    neededForUsers = true;
+  };
+
+  sops.secrets."passwords/root" = {
+    neededForUsers = true;
+  };
+
+  sops.secrets."network/nm-secrets.env" = {
+    mode = "0400";
+  };
+
+  sops.secrets."network/nordlynx-private.key" = {
+    mode = "0400";
+  };
+}

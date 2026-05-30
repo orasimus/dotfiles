@@ -12,6 +12,7 @@
     ./fonts.nix
     ./firefox.nix
     ./impermanence.nix
+    ./secrets.nix
     # ./samba.nix
   ];
 
@@ -57,10 +58,10 @@
 
   # Declarative WiFi via NetworkManager keyfile profiles. The PSK is kept
   # out of the world-readable nix store: `$WIFI_HOME_PSK` is substituted
-  # at activation time from /etc/nm-secrets.env (root:root 0400), which
-  # must contain the single line `WIFI_HOME_PSK=<password>`.
+  # at activation time from a sops-nix secret, which must contain the single
+  # line `WIFI_HOME_PSK=<password>`.
   networking.networkmanager.ensureProfiles = {
-    environmentFiles = [ "/etc/nm-secrets.env" ];
+    environmentFiles = [ config.sops.secrets."network/nm-secrets.env".path ];
     profiles.home = {
       connection = {
         id = "TP-Link_21EB";
@@ -165,9 +166,8 @@
 
   # Impermanence-friendly user management. `/etc/shadow` lives on the wiped
   # @root subvolume, so any imperatively-set password would vanish on the
-  # next reboot. Instead, hashes are staged once under /persist/passwords/
-  # (see impermanence.nix prerequisites) and the activation script rewrites
-  # /etc/shadow from them on every boot.
+  # next reboot. Instead, hashes are decrypted by sops-nix before users are
+  # created, and activation rewrites /etc/shadow from them on every boot.
   #
   # `mutableUsers = false` enforces the declarative path — `passwd` still
   # appears to work in a running session but its changes are dropped on
@@ -179,10 +179,10 @@
     description = "otso";
     extraGroups = [ "networkmanager" "wheel" ];
     shell = pkgs.fish;
-    hashedPasswordFile = "/persist/passwords/otso";
+    hashedPasswordFile = config.sops.secrets."passwords/otso".path;
   };
 
-  users.users.root.hashedPasswordFile = "/persist/passwords/root";
+  users.users.root.hashedPasswordFile = config.sops.secrets."passwords/root".path;
 
   # Compressed RAM swap — low-friction memory pressure relief for a desktop.
   zramSwap.enable = true;
