@@ -6,7 +6,7 @@
 
 {
   imports = [
-    ./hardware-configuration.nix
+    ./hardware-luks.nix
     ./vpn.nix
     ./desktop.nix
     ./fonts.nix

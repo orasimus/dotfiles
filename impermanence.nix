@@ -8,9 +8,7 @@
 #   1) The `@root-blank` subvolume must exist (must match the name used in
 #      the rollback script below — historically a typo here left the system
 #      with no @root after the first rollback):
-#        sudo mount -o subvol=/ /dev/nvme0n1p2 /mnt/btrfs
-#        sudo btrfs subvolume create /mnt/btrfs/@root-blank
-#        sudo umount /mnt/btrfs
+#        disko creates this from disko.nix during installation.
 #      (It is intentionally empty — every reboot snapshots this over @root.)
 #   2) The sops-nix age identity must exist at
 #      /persist/var/lib/sops-nix/key.txt (root-only). Password hashes, WiFi,
@@ -42,8 +40,8 @@
     description = "Roll @root btrfs subvolume back to a pristine state";
     wantedBy = [ "initrd.target" ];
     # Ordering: after the device node appears, before sysroot.mount mounts /.
-    after = [ "dev-disk-by\\x2duuid-630b3ded\\x2d5206\\x2d4369\\x2da36e\\x2d50a6d462db9c.device" ];
-    requires = [ "dev-disk-by\\x2duuid-630b3ded\\x2d5206\\x2d4369\\x2da36e\\x2d50a6d462db9c.device" ];
+    after = [ "dev-mapper-cryptroot.device" ];
+    requires = [ "dev-mapper-cryptroot.device" ];
     before = [ "sysroot.mount" ];
     unitConfig.DefaultDependencies = "no";
     serviceConfig.Type = "oneshot";
@@ -55,7 +53,7 @@
       set -euo pipefail
 
       mkdir -p /btrfs_tmp
-      mount -o subvol=/ /dev/disk/by-uuid/630b3ded-5206-4369-a36e-50a6d462db9c /btrfs_tmp
+      mount -o subvol=/ /dev/mapper/cryptroot /btrfs_tmp
       mkdir -p /btrfs_tmp/old_roots
 
       if [[ -e /btrfs_tmp/@root ]]; then

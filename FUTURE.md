@@ -22,19 +22,20 @@ The win is reproducibility for a reinstall I haven't done.
 Lighter than `sops-nix` for this scale (handful of standalone tokens, not
 bundles of related secrets).
 
-## Declarative disk layout with disko (+ optional LUKS)
+## Declarative disk layout with disko
 
-### Current setup (for reference)
+Implemented in `disko.nix`: the host now declares its install-time disk layout
+in the flake and imports `disko.nixosModules.disko`, so `fileSystems.*`,
+`swapDevices`, and the LUKS initrd config come from the same source.
 
-The disk is partitioned manually and not described anywhere in the flake.
 Partition table on `nvme0n1`:
 
 | Partition | FS    | UUID                                  | Mount / role         |
 |-----------|-------|---------------------------------------|----------------------|
-| nvme0n1p1 | vfat  | 81DF-3BF4                             | `/boot` (EFI system) |
-| nvme0n1p2 | btrfs | 630b3ded-5206-4369-a36e-50a6d462db9c  | data partition       |
+| nvme0n1p1 | vfat  | generated at format time              | `/boot` (EFI system) |
+| nvme0n1p2 | LUKS2 | generated at format time              | `cryptroot`          |
 
-BTRFS subvolumes on nvme0n1p2:
+BTRFS subvolumes inside `/dev/mapper/cryptroot`:
 
 | Subvolume    | Mounted at  | Role                                          |
 |--------------|-------------|-----------------------------------------------|
@@ -44,39 +45,15 @@ BTRFS subvolumes on nvme0n1p2:
 | `@persist`   | `/persist`  | persistent system state (see `impermanence.nix`) |
 | `@log`       | `/var/log`  | journal (neededForBoot)                       |
 
-No swap, no LUKS. The rollback service in `impermanence.nix` archives old
-`@root` snapshots under `/btrfs_tmp/old_roots/<timestamp>` for 30 days.
+No disk swap. The rollback service in `impermanence.nix` archives old `@root`
+snapshots under `/btrfs_tmp/old_roots/<timestamp>` for 30 days.
 
-### Why disko
-
-Right now a fresh install requires formatting the disk by hand before
-`asenna` can produce a working system — the partition/subvolume structure
-isn't captured in the flake at all. `disko` (github:nix-community/disko)
-would let `flake.nix` declare the exact layout above, so a reinstall becomes:
+Fresh install sketch:
 
 ```
-nix run github:nix-community/disko -- --mode disko path/to/disk.nix
+nix run github:nix-community/disko -- --mode destroy,format,mount ./disko.nix
 nixos-install --flake ~/.dotfiles#markeeg
 ```
-
-The disko module also emits `fileSystems.*` and `swapDevices` automatically,
-so `hardware-configuration.nix` entries for those could be dropped.
-
-### LUKS path
-
-Adding full-disk encryption is a natural follow-on: wrap nvme0n1p2 in a
-LUKS2 container, put the BTRFS on the opened `/dev/mapper/cryptroot`, and
-have disko generate the matching `boot.initrd.luks.devices.*` stanza. With
-`systemd-cryptenroll` the unlock key can be bound to a TPM2 PCR policy
-(silent unlock on trusted boots) with a fallback passphrase.
-
-The impermanence rollback service targets the device by UUID today; under
-LUKS it would target the mapper device (`/dev/mapper/cryptroot`) instead —
-a small script change.
-
-Why not now: the disk isn't going anywhere and a live re-encryption would
-need a full backup + reinstall. Worth doing at the next hardware refresh or
-whenever a reinstall is necessary for another reason.
 
 ## `nh` rebuild helper
 

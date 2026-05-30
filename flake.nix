@@ -19,13 +19,19 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, home-manager, impermanence, sops-nix }: {
+  outputs = { self, nixpkgs, home-manager, impermanence, sops-nix, disko }: {
     nixosConfigurations.markeeg = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
         ./configuration.nix
+        ./disko.nix
+        disko.nixosModules.disko
         impermanence.nixosModules.impermanence
         sops-nix.nixosModules.sops
         # Pin the system's flake registry entry for `nixpkgs` to the same
