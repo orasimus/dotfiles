@@ -105,6 +105,9 @@
       # fwupd: LVFS metadata cache + applied-update state.
       "/var/lib/fwupd"
 
+      # Secure Boot signing keys created by sbctl for Lanzaboote.
+      "/var/lib/sbctl"
+
       # systemd-coredump landing zone (mostly debugging convenience).
       "/var/lib/systemd/coredump"
 

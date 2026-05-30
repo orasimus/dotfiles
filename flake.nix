@@ -23,15 +23,20 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v1.0.0";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, home-manager, impermanence, sops-nix, disko }: {
+  outputs = { self, nixpkgs, home-manager, impermanence, sops-nix, disko, lanzaboote }: {
     nixosConfigurations.markeeg = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
         ./configuration.nix
         ./disko.nix
         disko.nixosModules.disko
+        lanzaboote.nixosModules.lanzaboote
         impermanence.nixosModules.impermanence
         sops-nix.nixosModules.sops
         # Pin the system's flake registry entry for `nixpkgs` to the same
