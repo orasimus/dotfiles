@@ -14,7 +14,7 @@
               type = "filesystem";
               format = "vfat";
               mountpoint = "/boot";
-              mountOptions = [ "fmask=0022" "dmask=0022" ];
+              mountOptions = [ "umask=0077" ];
             };
           };
 
@@ -26,6 +26,7 @@
               name = "cryptroot";
               settings = {
                 allowDiscards = true;
+                bypassWorkqueues = true;
               };
               content = {
                 type = "btrfs";
@@ -33,16 +34,20 @@
                 subvolumes = {
                   "@root" = {
                     mountpoint = "/";
+                    mountOptions = [ "compress=zstd" "noatime" ];
                   };
                   "@root-blank" = { };
                   "@nix" = {
                     mountpoint = "/nix";
+                    mountOptions = [ "compress=zstd" "noatime" ];
                   };
                   "@persist" = {
                     mountpoint = "/persist";
+                    mountOptions = [ "compress=zstd" "noatime" ];
                   };
                   "@log" = {
                     mountpoint = "/var/log";
+                    mountOptions = [ "compress=zstd" "noatime" ];
                   };
                 };
               };
