@@ -115,6 +115,17 @@
   # RealtimeKit — required by services.pipewire below for audio thread realtime priority.
   security.rtkit.enable = true;
 
+  # Monthly btrfs scrub: read every block and verify its checksum so silent
+  # bit-rot surfaces in journald instead of waiting for the day we cat the
+  # affected file. With no second copy on this host the scrub only detects,
+  # it cannot self-heal — early notice is still worth the background read.
+  services.btrfs.autoScrub.enable = true;
+
+  # Weekly fstrim — belt-and-braces alongside the kernel's inline
+  # `discard=async` (auto-enabled on btrfs since 6.2) and the LUKS
+  # `allowDiscards=true` passthrough configured in disko.nix.
+  services.fstrim.enable = true;
+
   # Firmware updates via LVFS (UEFI, SSD, dock, etc.). Run `fwupdmgr refresh`
   # then `fwupdmgr update` manually when you want to apply.
   services.fwupd.enable = true;
