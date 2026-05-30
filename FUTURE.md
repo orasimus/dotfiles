@@ -55,6 +55,44 @@ nix run github:nix-community/disko -- --mode destroy,format,mount ./disko.nix
 nixos-install --flake ~/.dotfiles#markeeg
 ```
 
+Before committing to the reinstall, make the disk-layout decisions that would
+be painful to change later:
+
+- ESP size: `disko.nix` currently allocates 1G for `/boot`. That is probably
+  enough, especially with Lanzaboote's NixOS-oriented stub, but growing the ESP
+  later is partition surgery. If in doubt, make it 2G before formatting.
+- Hibernation: the current plan has zram only and no disk swap. A btrfs
+  swapfile inside encrypted root can be added later, but it must be
+  preallocated, NODATACOW, uncompressed, and wired with a resume offset. A
+  dedicated encrypted swap partition would require deciding that now.
+- LVM inside LUKS: not needed for this host because btrfs subvolumes cover the
+  current use case. Adding LVM later would be a backup/restore migration, so
+  only add it now if separate block volumes or partition-like resizing are a
+  known requirement.
+- Filesystem choice: switching away from btrfs later means reinstall/restore.
+  Tweaking subvolumes, mount options, compression, scrub/balance timers, and
+  snapshot policy is incremental.
+- LUKS format shape: passphrases, recovery keys, TPM2 enrollment, FIDO2, and
+  key rotation are incremental LUKS2 keyslot changes. Changing fundamental
+  encryption parameters, detached headers, or integrity-style layouts later is
+  at least a high-risk reencrypt/restore job.
+
+Post-install hardening should not require another reinstall:
+
+- Lanzaboote / Secure Boot: layer on after the encrypted install. The host is
+  already UEFI + systemd-boot, which is the expected base.
+- TPM2 unlock: enroll with `systemd-cryptenroll` after LUKS exists; PCR policy
+  can be wiped and re-enrolled as the boot chain evolves.
+- Signed PCR policy / measured boot: add after Lanzaboote/UKI-style boot is in
+  place. Prefer policies that tolerate normal kernel/initrd updates over
+  sealing only to one current PCR value.
+- Secure Boot keys: firmware setup-mode work plus key enrollment/signing, not a
+  disk layout concern. Keep recovery media and firmware access in mind before
+  replacing OEM keys.
+- Normal NixOS hardening: agenix/sops-nix, AppArmor, firewall rules, sysctls,
+  audit/logging, systemd service sandboxing, user policy, fwupd, and
+  impermanence path adjustments are ordinary rebuilds.
+
 ## `nh` rebuild helper
 
 `pkgs.nh` wraps `nixos-rebuild`/`home-manager` with a build-tree view, a
