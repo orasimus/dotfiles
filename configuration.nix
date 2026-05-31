@@ -34,6 +34,7 @@
   environment.systemPackages = with pkgs; [
     fd
     jq
+    mangohud
     sbctl
   ];
 
@@ -115,7 +116,16 @@
   # the user program config lives in home.nix — both are needed.
   programs.fish.enable = true;
 
-  programs.steam.enable = true;
+  programs.gamemode.enable = true;
+  programs.gamescope.enable = true;
+  programs.steam = {
+    enable = true;
+    extraCompatPackages = with pkgs; [
+      proton-ge-bin
+    ];
+  };
+
+  powerManagement.cpuFreqGovernor = "performance";
 
   # RealtimeKit — required by services.pipewire below for audio thread realtime priority.
   security.rtkit.enable = true;
