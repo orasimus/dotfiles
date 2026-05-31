@@ -83,7 +83,6 @@ in
       "Public"
       "Games"
       ".dotfiles"
-      ".ssh"
 
       # app logins / state
       ".config/discord"
@@ -110,6 +109,8 @@ in
     ];
 
     files = [
+      ".ssh/config"
+      ".ssh/known_hosts"
       ".claude.json"
       ".bash_history"
     ];

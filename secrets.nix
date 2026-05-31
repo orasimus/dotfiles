@@ -21,4 +21,18 @@
   sops.secrets."network/nordlynx-private.key" = {
     mode = "0400";
   };
+
+  sops.secrets."ssh/github" = {
+    path = "/home/otso/.ssh/github";
+    owner = "otso";
+    group = "users";
+    mode = "0400";
+  };
+
+  sops.secrets."ssh/kapsi" = {
+    path = "/home/otso/.ssh/kapsi";
+    owner = "otso";
+    group = "users";
+    mode = "0400";
+  };
 }
