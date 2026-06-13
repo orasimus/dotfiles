@@ -1,0 +1,2 @@
+# Apps retained on the phone that must not install APKs from unknown sources.
+com.google.android.apps.nbu.files

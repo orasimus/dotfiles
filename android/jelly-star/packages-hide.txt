@@ -1,0 +1,5 @@
+# Keep these packages enabled, but remove them from normal launcher access.
+# This remains policy documentation until a launcher or device-owner mechanism
+# enforces it. ADB component-level disabling is blocked on this Android build.
+com.android.vending
+org.fdroid.fdroid

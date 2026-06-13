@@ -1,0 +1,55 @@
+# Current launcher-capable applications.
+# Play Store and F-Droid are intentionally hidden in Kvaesitso.
+# Format: display name | Android package
+
+ActiveAlert | com.active911.app
+Air New Zealand | nz.co.airnz.mpass
+ANZ goMoney | nz.co.anz.android.mobilebanking
+AT Park | au.com.paystay.atpark
+Audible | com.audible.application
+Bitwarden | com.x8bit.bitwarden
+Booking.com | com.booking
+Calculator | com.google.android.calculator
+Calendar | com.google.android.calendar
+Camera | com.mediatek.camera
+CBP MPC | gov.dhs.cbp.pspd.mpc
+ChatGPT | com.openai.chatgpt
+Clock | com.android.deskclock
+Contacts | com.google.android.contacts
+F-Droid | org.fdroid.fdroid
+Files | com.google.android.apps.nbu.files
+Google Authenticator | com.google.android.apps.authenticator2
+Google Keep | com.google.android.keep
+Google Maps | com.google.android.apps.maps
+Google Photos | com.google.android.apps.photos
+Google Wallet | com.google.android.apps.walletnfcrel
+IBKR Mobile | atws.app
+Kvaesitso | de.mm20.launcher2.release
+Marriott Bonvoy | com.marriott.mrt
+McDonald's | com.mcdonalds.mobileapp
+Messenger | com.facebook.orca
+Messages | com.google.android.apps.messaging
+Microsoft Authenticator | com.azure.authenticator
+Mobil NZ | com.exxonmobil.mobil.nz
+Navan | com.tripactions.alpha
+New World | nz.co.newworld.clubcard
+Nordnet | com.nordnet
+NZTD | nz.govt.mbie.td
+Phone | com.google.android.dialer
+Play Store | com.android.vending
+Revolut | com.revolut.revolut
+S-mobiili | fi.spankki
+Settings | com.android.settings
+Signal | org.thoughtcrime.securesms
+Spotify | com.spotify.music
+Steam | com.valvesoftware.android.steam.community
+Telegram | org.telegram.messenger
+Tend | com.tendapp
+Translate | com.google.android.apps.translate
+TSB Mobile Banking | tsb.mobilebanking
+Uber | com.ubercab
+VictronConnect | com.victronenergy.victronconnect
+WhatsApp | com.whatsapp
+Wise | com.transferwise.android
+Woolworths Rewards | com.woolworths.rewards
+Zepp | com.huami.watch.hmwatchmanager
