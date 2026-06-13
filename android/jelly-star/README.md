@@ -28,6 +28,7 @@ The scripts refuse to operate unless `ro.product.device` is `Jelly_Star`.
 `apply.sh`:
 
 - makes Kvaesitso the default Home application;
+- makes Bitwarden the default password/autofill service;
 - disables the packages in `packages-disable.txt`;
 - revokes unnecessary APK installation access;
 - applies the notification allow and deny lists.
@@ -45,6 +46,10 @@ can still open the Play Store.
 
 Application accounts, internal preferences, Kvaesitso layout, notification
 channels, battery exemptions, and app installation are not managed here.
+
+The Jelly Star runs Android 13. Bitwarden can provide password autofill, but
+Android 13 cannot select a third-party system passkey provider. That requires
+Android 14 or newer.
 
 ## Finalize
 

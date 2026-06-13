@@ -50,6 +50,13 @@ if [[ "$home" != de.mm20.launcher2.release/* ]]; then
   failures=$((failures + 1))
 fi
 
+autofill="$(adb shell settings get secure autofill_service | tr -d '\r')"
+if [[ "$autofill" != \
+  "com.x8bit.bitwarden/.Autofill.AutofillService" ]]; then
+  echo "FAIL default autofill service is $autofill"
+  failures=$((failures + 1))
+fi
+
 disabled="$(adb shell pm list packages -d --user 0)"
 while IFS= read -r package <&3; do
   case "$package" in

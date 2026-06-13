@@ -20,6 +20,9 @@ package_exists() {
   adb shell pm path --user 0 "$1" </dev/null 2>/dev/null | grep -q '^package:'
 }
 
+adb shell settings put secure autofill_service \
+  com.google.android.gms/.autofill.service.AutofillService </dev/null
+
 while IFS= read -r package <&3; do
   case "$package" in
     ''|'#'*) continue ;;

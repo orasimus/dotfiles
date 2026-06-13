@@ -22,6 +22,8 @@ package_exists() {
 
 adb shell cmd package set-home-activity --user 0 de.mm20.launcher2.release \
   </dev/null
+adb shell settings put secure autofill_service \
+  com.x8bit.bitwarden/.Autofill.AutofillService </dev/null
 
 while IFS= read -r package <&3; do
   case "$package" in
