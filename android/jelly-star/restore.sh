@@ -22,6 +22,9 @@ package_exists() {
 
 adb shell settings put secure autofill_service \
   com.google.android.gms/.autofill.service.AutofillService </dev/null
+adb shell ime enable \
+  com.google.android.tts/com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.VoiceInputMethodService \
+  </dev/null
 
 while IFS= read -r package <&3; do
   case "$package" in

@@ -57,6 +57,20 @@ if [[ "$autofill" != \
   failures=$((failures + 1))
 fi
 
+gboard="com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME"
+keyboard="$(adb shell settings get secure default_input_method | tr -d '\r')"
+enabled_keyboards="$(
+  adb shell settings get secure enabled_input_methods | tr -d '\r'
+)"
+if [[ "$keyboard" != "$gboard" ]]; then
+  echo "FAIL default keyboard is $keyboard"
+  failures=$((failures + 1))
+fi
+if [[ "$enabled_keyboards" != "$gboard" ]]; then
+  echo "FAIL enabled keyboards are $enabled_keyboards"
+  failures=$((failures + 1))
+fi
+
 disabled="$(adb shell pm list packages -d --user 0)"
 while IFS= read -r package <&3; do
   case "$package" in

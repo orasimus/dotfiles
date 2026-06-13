@@ -24,6 +24,15 @@ adb shell cmd package set-home-activity --user 0 de.mm20.launcher2.release \
   </dev/null
 adb shell settings put secure autofill_service \
   com.x8bit.bitwarden/.Autofill.AutofillService </dev/null
+adb shell ime disable \
+  com.google.android.tts/com.google.android.apps.speech.tts.googletts.settings.asr.voiceime.VoiceInputMethodService \
+  </dev/null
+adb shell ime enable \
+  com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME \
+  </dev/null
+adb shell ime set \
+  com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME \
+  </dev/null
 
 while IFS= read -r package <&3; do
   case "$package" in

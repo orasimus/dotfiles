@@ -29,6 +29,7 @@ The scripts refuse to operate unless `ro.product.device` is `Jelly_Star`.
 
 - makes Kvaesitso the default Home application;
 - makes Bitwarden the default password/autofill service;
+- makes Gboard the only enabled/default input method;
 - disables the packages in `packages-disable.txt`;
 - revokes unnecessary APK installation access;
 - applies the notification allow and deny lists.
@@ -43,6 +44,11 @@ ADB cannot reproduce it without root. Hide these apps manually:
 
 Keep Play Store automatic updates enabled. Store hiding is cosmetic: Settings
 can still open the Play Store.
+
+Inside **Gboard Settings > Languages**, keep only **Suomi (Suomi)** with the
+**suomi** layout. Gboard stores this language selection in private app data, so
+ADB cannot reproduce it. The scripts do remove the separate Google Voice
+Typing input method and make Gboard the sole/default keyboard.
 
 Application accounts, internal preferences, Kvaesitso layout, notification
 channels, battery exemptions, and app installation are not managed here.
