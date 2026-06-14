@@ -45,8 +45,10 @@ in
   # ripgrep) — they're installed implicitly by their respective modules.
   home.packages = with pkgs; [
     chafa
+    gocryptfs
     heroic
     qbittorrent
+    rsync
     spotify
     sublime-merge
   ];
@@ -223,7 +225,26 @@ in
       asenna = "sudo nixos-rebuild switch --flake ~/.dotfiles#markeeg";
       cat = "bat";
     };
-    functions.fish_greeting = "";
+    functions = {
+      fish_greeting = "";
+      kopioi = ''
+        if not ${pkgs.util-linux}/bin/mountpoint -q "$HOME/Vault"
+          echo "kopioi: ~/Vault is not mounted" >&2
+          return 1
+        end
+        if test (count $argv) -ne 2
+          echo "usage: kopioi SOURCE VAULT_PATH" >&2
+          return 2
+        end
+        if string match -qr '^/|(^|/)\.\.(/|$)' -- "$argv[2]"
+          echo "kopioi: VAULT_PATH must stay under ~/Vault" >&2
+          return 2
+        end
+        set -l vault_path (string trim -r -c / -- "$argv[2]")
+        test -n "$vault_path"; or set vault_path .
+        command ${pkgs.rsync}/bin/rsync -rtvLh --partial --mkpath --info=progress2 -- "$argv[1]" "$HOME/Vault/$vault_path/"
+      '';
+    };
   };
 
   # App launcher — SUPER+D in Hyprland. Catppuccin Mocha to match kitty.
@@ -383,6 +404,26 @@ in
   # synced files under ~/.dropbox-hm. Persisting that directory preserves the
   # device authorization and Dropbox contents across root rollbacks.
   services.dropbox.enable = true;
+
+  # Decrypted view of the gocryptfs vault stored in Dropbox. The service only
+  # mounts an existing vault: initialization is intentionally manual so a new
+  # machine cannot create a conflicting vault before Dropbox has synced the
+  # real gocryptfs.conf.
+  systemd.user.services.gocryptfs-vault = {
+    Unit = {
+      Description = "Mount encrypted Dropbox vault";
+      After = [ "dropbox.service" ];
+      ConditionPathExists = "%h/Dropbox/.Vault/gocryptfs.conf";
+    };
+    Install.WantedBy = [ "default.target" ];
+    Service = {
+      Type = "simple";
+      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p %h/Vault";
+      ExecStart = "${pkgs.gocryptfs}/bin/gocryptfs -fg -nosyslog -passfile /run/secrets/gocryptfs/vault-password %h/Dropbox/.Vault %h/Vault";
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+  };
 
   # Idle handling: blank the display after 5 min (matches the previous
   # powerdevilrc behaviour). No auto-lock — Super+L locks manually.

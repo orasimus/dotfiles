@@ -22,6 +22,12 @@
     mode = "0400";
   };
 
+  sops.secrets."gocryptfs/vault-password" = {
+    owner = "otso";
+    group = "users";
+    mode = "0400";
+  };
+
   sops.secrets."ssh/github" = {
     path = "/home/otso/.ssh/github";
     owner = "otso";
