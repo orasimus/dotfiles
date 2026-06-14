@@ -28,6 +28,12 @@
     mode = "0400";
   };
 
+  sops.secrets."rclone/config" = {
+    owner = "otso";
+    group = "users";
+    mode = "0600";
+  };
+
   sops.secrets."ssh/github" = {
     path = "/home/otso/.ssh/github";
     owner = "otso";
