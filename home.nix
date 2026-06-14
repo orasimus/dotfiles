@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 let
   # Standard US layout with AltGr as level-3 shifter, plus ö/ä on AC10/AC11.
   # Combined with services.keyd (configuration.nix) which rewrites Ctrl+;/'
@@ -85,6 +85,7 @@ in
       ".dotfiles"
 
       # app logins / state
+      ".dropbox-hm"
       ".config/discord"
       ".local/share/Steam"
       ".steam"
@@ -377,6 +378,11 @@ in
     # names, normal cd semantics for absolute paths, `cd -`, `cd ..`, etc.
     options = [ "--cmd" "cd" ];
   };
+
+  # Dropbox keeps its mutable authentication state, downloaded daemon, and
+  # synced files under ~/.dropbox-hm. Persisting that directory preserves the
+  # device authorization and Dropbox contents across root rollbacks.
+  services.dropbox.enable = true;
 
   # Idle handling: blank the display after 5 min (matches the previous
   # powerdevilrc behaviour). No auto-lock — Super+L locks manually.
