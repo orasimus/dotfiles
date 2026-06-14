@@ -38,6 +38,14 @@
     sbctl
   ];
 
+  # Keep Codex's user config writable for project trust and interactive
+  # settings. Claude Code still consumes the shared Home Manager MCP config.
+  environment.etc."codex/config.toml".text = ''
+    [mcp_servers.nixos]
+    command = "${pkgs.mcp-nixos}/bin/mcp-nixos"
+    enabled = true
+  '';
+
   # Bluetooth — managed from a terminal via `bluetoothctl` (no tray applet).
   hardware.bluetooth = {
     enable = true;

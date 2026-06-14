@@ -189,7 +189,10 @@ in
 
   programs.codex = {
     enable = true;
-    enableMcpIntegration = true;
+    # Codex persists project trust and other interactive settings here, so
+    # ~/.codex/config.toml must remain writable. MCP config lives in the
+    # lower-precedence system config declared in configuration.nix.
+    enableMcpIntegration = false;
   };
 
   programs.delta = {
