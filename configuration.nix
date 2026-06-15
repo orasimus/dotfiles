@@ -218,6 +218,12 @@
 
   users.users.root.hashedPasswordFile = config.sops.secrets."passwords/root".path;
 
+  # The acknowledgement state lives on the ephemeral root, so suppress sudo's
+  # introductory lecture instead of showing it again after every reboot.
+  security.sudo.extraConfig = ''
+    Defaults lecture=never
+  '';
+
   # Compressed RAM swap — low-friction memory pressure relief for a desktop.
   zramSwap.enable = true;
 }
