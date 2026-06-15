@@ -88,7 +88,6 @@ in
       ".dotfiles"
 
       # app logins / state
-      "Dropbox"
       ".dropbox-hm"
       ".cache/rclone"
       ".config/discord"
@@ -121,6 +120,13 @@ in
       ".bash_history"
     ];
   };
+
+  # The Dropbox service keeps mutable state under ~/.dropbox-hm. Declare the
+  # compatibility links instead of relying on service startup order.
+  home.file.".dropbox".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dropbox-hm/.dropbox";
+  home.file."Dropbox".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dropbox-hm/Dropbox";
 
   programs.bat.enable = true;
 
@@ -230,6 +236,25 @@ in
     };
     functions = {
       fish_greeting = "";
+      __rclone_config = ''
+        if not test -r /run/secrets/rclone/config
+          echo "SOPS-managed rclone config is unavailable; run 'asenna'" >&2
+          return 1
+        end
+        if not set -q XDG_RUNTIME_DIR
+          echo "XDG_RUNTIME_DIR is unavailable" >&2
+          return 1
+        end
+
+        set -l config_dir "$XDG_RUNTIME_DIR/rclone"
+        set -l config_file "$config_dir/rclone.conf"
+        command ${pkgs.coreutils}/bin/mkdir -p "$config_dir"; or return
+        command ${pkgs.coreutils}/bin/chmod 700 "$config_dir"; or return
+        if not test -f "$config_file"
+          command ${pkgs.coreutils}/bin/install -m 600 /run/secrets/rclone/config "$config_file"; or return
+        end
+        printf '%s\n' "$config_file"
+      '';
       kopioi = ''
         if not ${pkgs.util-linux}/bin/mountpoint -q "$HOME/Vault"
           echo "kopioi: ~/Vault is not mounted" >&2
@@ -256,33 +281,17 @@ in
           echo "arkistoi: source does not exist: $argv[1]" >&2
           return 1
         end
+        if not ${pkgs.util-linux}/bin/mountpoint -q "$HOME/Archive"
+          echo "arkistoi: ~/Archive is not mounted; run 'avaa-arkisto'" >&2
+          return 1
+        end
         if string match -qr '^/|(^|/)\.\.(/|$)' -- "$argv[2]"
           echo "arkistoi: ARCHIVE_PATH must stay under the archive root" >&2
           return 2
         end
-        if not test -r /run/secrets/rclone/config
-          echo "arkistoi: SOPS-managed rclone config is unavailable; run 'asenna'" >&2
-          return 1
-        end
-        if not ${pkgs.rclone}/bin/rclone --config /run/secrets/rclone/config listremotes | string match -qx 'archive:'
-          echo "arkistoi: rclone remote 'archive:' is missing from the SOPS-managed config" >&2
-          return 1
-        end
-
         set -l archive_path (string trim -r -c / -- "$argv[2]")
-        set -l destination "archive:$archive_path"
-        if test -d "$argv[1]"
-          set -l source_name (${pkgs.coreutils}/bin/basename -- (string trim -r -c / -- "$argv[1]"))
-          set destination "$destination/$source_name"
-        end
-
-        command ${pkgs.rclone}/bin/rclone --config /run/secrets/rclone/config copy \
-          --copy-links \
-          --create-empty-src-dirs \
-          --checkers 8 \
-          --transfers 4 \
-          --progress \
-          -- "$argv[1]" "$destination"
+        test -n "$archive_path"; or set archive_path .
+        command ${pkgs.rsync}/bin/rsync -rtvLh --partial --mkpath --info=progress2 -- "$argv[1]" "$HOME/Archive/$archive_path/"
       '';
       arkistoi-siirra = ''
         if test (count $argv) -ne 2
@@ -293,15 +302,16 @@ in
           echo "arkistoi-siirra: source does not exist: $argv[1]" >&2
           return 1
         end
+        if not ${pkgs.util-linux}/bin/mountpoint -q "$HOME/Archive"
+          echo "arkistoi-siirra: ~/Archive is not mounted; run 'avaa-arkisto'" >&2
+          return 1
+        end
         if string match -qr '^/|(^|/)\.\.(/|$)' -- "$argv[2]"
           echo "arkistoi-siirra: ARCHIVE_PATH must stay under the archive root" >&2
           return 2
         end
-        if not test -r /run/secrets/rclone/config
-          echo "arkistoi-siirra: SOPS-managed rclone config is unavailable; run 'asenna'" >&2
-          return 1
-        end
-        if not ${pkgs.rclone}/bin/rclone --config /run/secrets/rclone/config listremotes | string match -qx 'archive:'
+        set -l rclone_config (__rclone_config); or return
+        if not ${pkgs.rclone}/bin/rclone --config "$rclone_config" listremotes | string match -q -- 'archive:'
           echo "arkistoi-siirra: rclone remote 'archive:' is missing from the SOPS-managed config" >&2
           return 1
         end
@@ -313,30 +323,33 @@ in
           set destination "$destination/$source_name"
         end
 
-        command ${pkgs.rclone}/bin/rclone --config /run/secrets/rclone/config move \
+        command ${pkgs.rclone}/bin/rclone --config "$rclone_config" copy \
           --copy-links \
           --create-empty-src-dirs \
           --checkers 8 \
           --transfers 4 \
           --progress \
           -- "$argv[1]" "$destination"
+        or return
+
+        set -l mount_pid (${pkgs.procps}/bin/pgrep -n -f -- "mount archive: $HOME/Archive")
+        if test -n "$mount_pid"
+          command ${pkgs.coreutils}/bin/kill -HUP "$mount_pid"
+        end
       '';
       avaa-arkisto = ''
         if ${pkgs.util-linux}/bin/mountpoint -q "$HOME/Archive"
           echo "avaa-arkisto: ~/Archive is already mounted" >&2
           return 1
         end
-        if not test -r /run/secrets/rclone/config
-          echo "avaa-arkisto: SOPS-managed rclone config is unavailable; run 'asenna'" >&2
-          return 1
-        end
-        if not ${pkgs.rclone}/bin/rclone --config /run/secrets/rclone/config listremotes | string match -qx 'archive:'
+        set -l rclone_config (__rclone_config); or return
+        if not ${pkgs.rclone}/bin/rclone --config "$rclone_config" listremotes | string match -q -- 'archive:'
           echo "avaa-arkisto: rclone remote 'archive:' is missing from the SOPS-managed config" >&2
           return 1
         end
 
         ${pkgs.coreutils}/bin/mkdir -p "$HOME/Archive"
-        command ${pkgs.rclone}/bin/rclone --config /run/secrets/rclone/config mount archive: "$HOME/Archive" \
+        command ${pkgs.rclone}/bin/rclone --config "$rclone_config" mount archive: "$HOME/Archive" \
           --vfs-cache-mode full \
           --cache-dir "$HOME/.cache/rclone" \
           --vfs-cache-max-size 50G \
@@ -350,7 +363,7 @@ in
           return 1
         end
 
-        command ${pkgs.fuse3}/bin/fusermount3 -u "$HOME/Archive"
+        command /run/wrappers/bin/fusermount3 -u "$HOME/Archive"
       '';
     };
   };
@@ -508,9 +521,8 @@ in
     options = [ "--cmd" "cd" ];
   };
 
-  # Dropbox keeps its mutable authentication state and downloaded daemon under
-  # ~/.dropbox-hm, while the actual sync root is ~/Dropbox. Both are persisted
-  # so device authorization and locally synced contents survive root rollbacks.
+  # Dropbox keeps its mutable authentication state, downloaded daemon, and sync
+  # root under ~/.dropbox-hm; ~/Dropbox is the declarative compatibility link.
   services.dropbox.enable = true;
 
   # Decrypted view of the gocryptfs vault stored in Dropbox. The service only
