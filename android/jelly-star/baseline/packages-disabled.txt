@@ -1,2 +1,0 @@
-package:com.google.android.ims
-package:com.google.android.gms.supervision
