@@ -313,6 +313,65 @@ in
           command ${pkgs.coreutils}/bin/kill -HUP "$mount_pid"
         end
       '';
+      poista-arkistosta = ''
+        if test (count $argv) -ne 1
+          echo "usage: poista-arkistosta ARCHIVE_PATH" >&2
+          return 2
+        end
+        if string match -qr '^/|(^|/)\.\.(/|$)' -- "$argv[1]"
+          echo "poista-arkistosta: ARCHIVE_PATH must stay under the archive root" >&2
+          return 2
+        end
+
+        set -l archive_path (string trim -r -c / -- "$argv[1]")
+        if test -z "$archive_path"
+          echo "poista-arkistosta: refusing to delete the archive root" >&2
+          return 2
+        end
+
+        set -l rclone_config (__rclone_config); or return
+        if not ${pkgs.rclone}/bin/rclone --config "$rclone_config" listremotes | string match -q -- 'archive:'
+          echo "poista-arkistosta: rclone remote 'archive:' is missing from the SOPS-managed config" >&2
+          return 1
+        end
+
+        set -l target "archive:$archive_path"
+        set -l object_json (${pkgs.rclone}/bin/rclone --config "$rclone_config" lsjson --stat -- "$target")
+        if test $status -ne 0
+          echo "poista-arkistosta: not found: $archive_path" >&2
+          return 1
+        end
+        set -l object_type (printf '%s\n' $object_json | ${pkgs.jq}/bin/jq -r 'if .IsDir == true then "directory" elif .IsDir == false then "file" else empty end')
+        if test $status -ne 0 -o -z "$object_type"
+          echo "poista-arkistosta: could not inspect: $archive_path" >&2
+          return 1
+        end
+
+        echo "About to permanently delete $object_type from archive:"
+        echo "  $archive_path"
+        read --prompt-str "Type the archive path to continue: " confirm
+        if test "$confirm" != "$archive_path"
+          echo "poista-arkistosta: cancelled" >&2
+          return 1
+        end
+
+        if test "$object_type" = directory
+          command ${pkgs.rclone}/bin/rclone --config "$rclone_config" purge -- "$target"
+        else
+          command ${pkgs.rclone}/bin/rclone --config "$rclone_config" deletefile -- "$target"
+        end
+        set -l delete_status $status
+        if test $delete_status -eq 0
+          return 0
+        end
+
+        set -l stat_output (${pkgs.rclone}/bin/rclone --config "$rclone_config" lsjson --stat -- "$target" 2>&1 >/dev/null)
+        if string match -q '*not_found*' -- $stat_output; or string match -q '*not found*' -- $stat_output
+          echo "poista-arkistosta: target is gone; treating rclone's final not_found as success" >&2
+          return 0
+        end
+        return $delete_status
+      '';
       avaa-arkisto = ''
         if ${pkgs.util-linux}/bin/mountpoint -q "$HOME/Archive"
           echo "avaa-arkisto: ~/Archive is already mounted" >&2
