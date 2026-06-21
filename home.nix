@@ -89,7 +89,6 @@ in
 
       # app logins / state
       ".dropbox-hm"
-      ".cache/rclone"
       ".config/discord"
       ".local/share/Steam"
       ".steam"
@@ -283,38 +282,13 @@ in
           echo "arkistoi: source does not exist: $argv[1]" >&2
           return 1
         end
-        if not ${pkgs.util-linux}/bin/mountpoint -q "$HOME/Archive"
-          echo "arkistoi: ~/Archive is not mounted; run 'avaa-arkisto'" >&2
-          return 1
-        end
         if string match -qr '^/|(^|/)\.\.(/|$)' -- "$argv[2]"
           echo "arkistoi: ARCHIVE_PATH must stay under the archive root" >&2
           return 2
         end
-        set -l archive_path (string trim -r -c / -- "$argv[2]")
-        test -n "$archive_path"; or set archive_path .
-        command ${pkgs.rsync}/bin/rsync -rtvLh --partial --mkpath --info=progress2 -- "$argv[1]" "$HOME/Archive/$archive_path/"
-      '';
-      arkistoi-siirra = ''
-        if test (count $argv) -ne 2
-          echo "usage: arkistoi-siirra SOURCE ARCHIVE_PATH" >&2
-          return 2
-        end
-        if not test -e "$argv[1]"
-          echo "arkistoi-siirra: source does not exist: $argv[1]" >&2
-          return 1
-        end
-        if not ${pkgs.util-linux}/bin/mountpoint -q "$HOME/Archive"
-          echo "arkistoi-siirra: ~/Archive is not mounted; run 'avaa-arkisto'" >&2
-          return 1
-        end
-        if string match -qr '^/|(^|/)\.\.(/|$)' -- "$argv[2]"
-          echo "arkistoi-siirra: ARCHIVE_PATH must stay under the archive root" >&2
-          return 2
-        end
         set -l rclone_config (__rclone_config); or return
         if not ${pkgs.rclone}/bin/rclone --config "$rclone_config" listremotes | string match -q -- 'archive:'
-          echo "arkistoi-siirra: rclone remote 'archive:' is missing from the SOPS-managed config" >&2
+          echo "arkistoi: rclone remote 'archive:' is missing from the SOPS-managed config" >&2
           return 1
         end
 
@@ -352,12 +326,14 @@ in
 
         ${pkgs.coreutils}/bin/mkdir -p "$HOME/Archive"
         command ${pkgs.rclone}/bin/rclone --config "$rclone_config" mount archive: "$HOME/Archive" \
-          --vfs-cache-mode full \
-          --cache-dir "$HOME/.cache/rclone" \
-          --vfs-cache-max-size 50G \
-          --vfs-cache-max-age 7d \
-          --vfs-cache-min-free-space 20G \
+          --read-only \
           --daemon
+        or return
+
+        if not ${pkgs.util-linux}/bin/mountpoint -q "$HOME/Archive"
+          echo "avaa-arkisto: rclone returned before ~/Archive was mounted; move ~/.cache/rclone/vfs/archive aside if stale VFS cache is blocking startup" >&2
+          return 1
+        end
       '';
       sulje-arkisto = ''
         if not ${pkgs.util-linux}/bin/mountpoint -q "$HOME/Archive"
