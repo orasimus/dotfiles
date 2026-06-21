@@ -233,6 +233,8 @@ in
     shellAliases = {
       asenna = "sudo nixos-rebuild switch --flake ~/.dotfiles#markeeg";
       cat = "bat";
+      laneille = "sudo /run/current-system/specialisation/lan/bin/switch-to-configuration switch";
+      kotiin = "sudo /nix/var/nix/profiles/system/bin/switch-to-configuration switch";
     };
     functions = {
       fish_greeting = "";

@@ -8,12 +8,12 @@
   imports = [
     ./hardware-luks.nix
     ./vpn.nix
+    ./lan-party.nix
     ./desktop.nix
     ./fonts.nix
     ./firefox.nix
     ./impermanence.nix
     ./secrets.nix
-    # ./samba.nix
   ];
 
   # Bootloader.

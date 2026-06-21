@@ -1,9 +1,7 @@
 { config, lib, pkgs, ... }:
 
 {
-  # Samba file server. Exposes ~/Public as the `public` share, authenticated
-  # as the `otso` Unix user. The Samba password is *separate* from the login
-  # password — set it after the first rebuild with `sudo smbpasswd -a otso`.
+  # Samba file server. Exposes ~/Public as the unauthenticated `Share` share.
   # openFirewall covers 139/445 (SMB) and 137/138 (NetBIOS name/datagram).
   services.samba = {
     enable = true;
@@ -13,17 +11,16 @@
         "server string" = "markeeg";
         "workgroup" = "WORKGROUP";
         "security" = "user";
-        "map to guest" = "never";
+        "map to guest" = "Bad User";
         # Restrict to the LAN; tighten if you know your subnet.
         "hosts allow" = "192.168. 10. 127.";
         "hosts deny" = "0.0.0.0/0";
       };
-      public = {
+      Share = {
         path = "/home/otso/Public";
         browseable = "yes";
         "read only" = "no";
-        "guest ok" = "no";
-        "valid users" = "otso";
+        "guest ok" = "yes";
         "force user" = "otso";
         "create mask" = "0644";
         "directory mask" = "0755";
