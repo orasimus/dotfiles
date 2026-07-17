@@ -50,6 +50,7 @@ in
     qbittorrent
     rclone
     rsync
+    slack
     spotify
     sublime-merge
   ];
@@ -96,6 +97,7 @@ in
       ".config/heroic"
       ".config/qBittorrent"
       ".local/share/qBittorrent"
+      ".config/Slack"
       ".config/ZapZap"
       ".local/share/ZapZap"
       ".config/sublime-merge"
