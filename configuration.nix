@@ -10,6 +10,7 @@
     ./vpn.nix
     ./lan-party.nix
     ./desktop.nix
+    ./waydroid.nix
     ./fonts.nix
     ./firefox.nix
     ./impermanence.nix

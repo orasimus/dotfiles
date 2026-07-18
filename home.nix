@@ -102,6 +102,7 @@ in
       ".local/share/ZapZap"
       ".config/sublime-merge"
       ".config/mozilla/firefox"
+      ".local/share/waydroid"
 
       # Claude Code state (sessions, memory, plans)
       ".claude"
