@@ -53,6 +53,7 @@ in
     slack
     spotify
     sublime-merge
+    yacreader
   ];
 
   # Impermanence: bind-mount the listed paths from /persist/home/otso into ~
