@@ -5,7 +5,8 @@
   # openFirewall covers 139/445 (SMB) and 137/138 (NetBIOS name/datagram).
   services.samba = {
     enable = true;
-    openFirewall = true;
+    openFirewall = false;
+    winbindd.enable = false;
     settings = {
       global = {
         "server string" = "markeeg";
@@ -32,8 +33,13 @@
   # Opens UDP 3702 and TCP 5357.
   services.samba-wsdd = {
     enable = true;
-    openFirewall = true;
+    openFirewall = false;
   };
+
+  # `laneille` starts these on demand. Keeping them out of multi-user.target
+  # avoids exposing SMB during normal VPN-on use without needing a specialisation.
+  systemd.targets.samba.wantedBy = lib.mkForce [ ];
+  systemd.services.samba-wsdd.wantedBy = lib.mkForce [ ];
 
   # Make sure the shared directory exists and is owned by otso.
   systemd.tmpfiles.rules = [

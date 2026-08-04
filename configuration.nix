@@ -8,7 +8,8 @@
   imports = [
     ./hardware-luks.nix
     ./vpn.nix
-    ./lan-party.nix
+    ./samba.nix
+    ./lan-mode.nix
     ./desktop.nix
     ./waydroid.nix
     ./fonts.nix
