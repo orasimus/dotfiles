@@ -102,7 +102,7 @@ in
 {
   home.packages = [ kello muista ];
 
-  wayland.windowManager.hyprland.settings.bind = [
-    "SUPER, T, exec, kello"
-  ];
+  wayland.windowManager.hyprland.extraConfig = ''
+    hl.bind("SUPER + T", hl.dsp.exec_cmd("kello"))
+  '';
 }

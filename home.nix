@@ -595,20 +595,20 @@ in
           # On lockscreen: blank display after 1 min of idle.
           # pidof check makes this a no-op during normal (unlocked) use.
           timeout = 60;
-          on-timeout = "pidof hyprlock && hyprctl dispatch dpms off";
-          on-resume = "hyprctl dispatch dpms on";
+          on-timeout = "pidof hyprlock && hyprctl dispatch 'hl.dsp.dpms({action = \"off\"})'";
+          on-resume = "hyprctl dispatch 'hl.dsp.dpms({action = \"on\"})'";
         }
         {
           # Normal use: blank display after 5 min of idle.
           timeout = 300;
-          on-timeout = "hyprctl dispatch dpms off";
-          on-resume = "hyprctl dispatch dpms on";
+          on-timeout = "hyprctl dispatch 'hl.dsp.dpms({action = \"off\"})'";
+          on-resume = "hyprctl dispatch 'hl.dsp.dpms({action = \"on\"})'";
         }
       ];
     };
   };
 
-  # Wallpaper daemon. Monitor names match wayland.windowManager.hyprland.monitor
+  # Wallpaper daemon. Monitor names match wayland.windowManager.hyprland.settings.monitor
   # below: DP-2 is the Samsung Odyssey, HDMI-A-1 is the Dell U2412M. Both images
   # live inside the flake as Nix path literals so they get copied into the store
   # at eval time — no $HOME or absolute path leakage. The block form for
@@ -634,95 +634,100 @@ in
   # letting both manage it leads to dueling units.
   wayland.windowManager.hyprland = {
     enable = true;
+    # Portal registration is system-owned in desktop.nix. Home Manager owns
+    # the compositor package and config, including reloading it on activation.
+    portalPackage = null;
     systemd.enable = false;
-    configType = "hyprlang";
+    configType = "lua";
     settings = {
+      # `config` maps to hl.config({ ... }) in Home Manager's Lua backend.
+      config = {
+        input = {
+          kb_file = "${umlautKeymap}";
+          follow_mouse = 1;
+        };
+
+        general = {
+          gaps_in = 4;
+          gaps_out = 8;
+          border_size = 2;
+        };
+
+        decoration.rounding = 4;
+
+        ecosystem = {
+          no_update_news = true;
+          no_donation_nag = true;
+        };
+
+        misc = {
+          disable_hyprland_logo = true;
+          disable_splash_rendering = true;
+          disable_scale_notification = true;
+          # Explicitly disable the bundled "anime girl" default wallpaper. The
+          # text baked into those PNGs (e.g. the "dt" easter egg) shows through
+          # on any monitor not covered by hyprpaper; disable_hyprland_logo alone
+          # doesn't always suppress it.
+          force_default_wallpaper = 0;
+        };
+      };
+
       # Dell U2412M sits physically to the left of the Samsung Odyssey.
       monitor = [
-        "DP-2,3440x1440@119.96,0x0,1"
-        "HDMI-A-1,1920x1200@59.95,-1920x0,1"
-      ];
-
-      input = {
-        kb_file = "${umlautKeymap}";
-        follow_mouse = 1;
-      };
-
-      general = {
-        gaps_in = 4;
-        gaps_out = 8;
-        border_size = 2;
-      };
-
-      decoration = {
-        rounding = 4;
-      };
-
-      ecosystem = {
-        no_update_news = true;
-        no_donation_nag = true;
-      };
-
-      misc = {
-        disable_hyprland_logo = true;
-        disable_splash_rendering = true;
-        disable_scale_notification = true;
-        # Explicitly disable the bundled "anime girl" default wallpaper. The
-        # text baked into those PNGs (e.g. the "dt" easter egg) shows through
-        # on any monitor not covered by hyprpaper; disable_hyprland_logo alone
-        # doesn't always suppress it.
-        force_default_wallpaper = 0;
-      };
-
-      bind = [
-        # apps
-        "SUPER, Return, exec, kitty"
-        "SUPER, D, exec, fuzzel"
-        "SUPER, L, exec, hyprlock"
-
-        # window mgmt
-        "SUPER, Q, killactive,"
-        "SUPER, F, fullscreen,"
-        "SUPER, V, togglefloating,"
-
-        # focus (arrows — SUPER+L is taken by hyprlock above)
-        "SUPER, left,  movefocus, l"
-        "SUPER, down,  movefocus, d"
-        "SUPER, up,    movefocus, u"
-        "SUPER, right, movefocus, r"
-
-        # move windows
-        "SUPER SHIFT, left,  movewindow, l"
-        "SUPER SHIFT, down,  movewindow, d"
-        "SUPER SHIFT, up,    movewindow, u"
-        "SUPER SHIFT, right, movewindow, r"
-
-        # workspaces
-        "SUPER, 1, workspace, 1"
-        "SUPER, 2, workspace, 2"
-        "SUPER, 3, workspace, 3"
-        "SUPER, 4, workspace, 4"
-        "SUPER, 5, workspace, 5"
-        "SUPER, 6, workspace, 6"
-        "SUPER, 7, workspace, 7"
-        "SUPER, 8, workspace, 8"
-        "SUPER, 9, workspace, 9"
-        "SUPER SHIFT, 1, movetoworkspace, 1"
-        "SUPER SHIFT, 2, movetoworkspace, 2"
-        "SUPER SHIFT, 3, movetoworkspace, 3"
-        "SUPER SHIFT, 4, movetoworkspace, 4"
-        "SUPER SHIFT, 5, movetoworkspace, 5"
-        "SUPER SHIFT, 6, movetoworkspace, 6"
-        "SUPER SHIFT, 7, movetoworkspace, 7"
-        "SUPER SHIFT, 8, movetoworkspace, 8"
-        "SUPER SHIFT, 9, movetoworkspace, 9"
-      ];
-
-      # Mouse-drag move/resize
-      bindm = [
-        "SUPER, mouse:272, movewindow"
-        "SUPER, mouse:273, resizewindow"
+        {
+          output = "DP-2";
+          mode = "3440x1440@119.96";
+          position = "0x0";
+          scale = 1;
+        }
+        {
+          output = "HDMI-A-1";
+          mode = "1920x1200@59.95";
+          position = "-1920x0";
+          scale = 1;
+        }
       ];
     };
+
+    # Binds use Hyprland's native Lua dispatcher API. Keeping these as Lua is
+    # substantially clearer than Home Manager's `_args`/mkLuaInline encoding.
+    extraConfig = ''
+      -- Apps
+      hl.bind("SUPER + RETURN", hl.dsp.exec_cmd("kitty"))
+      hl.bind("SUPER + D", hl.dsp.exec_cmd("fuzzel"))
+      hl.bind("SUPER + L", hl.dsp.exec_cmd("hyprlock"))
+
+      -- Window management
+      hl.bind("SUPER + Q", hl.dsp.window.close())
+      hl.bind("SUPER + F", hl.dsp.window.fullscreen({}))
+      hl.bind("SUPER + V", hl.dsp.window.float())
+
+      -- Focus and move windows (SUPER+L is taken by hyprlock above).
+      local directions = {
+        left = "l",
+        down = "d",
+        up = "u",
+        right = "r",
+      }
+
+      for key, direction in pairs(directions) do
+        hl.bind("SUPER + " .. key, hl.dsp.focus({ direction = direction }))
+        hl.bind("SUPER + SHIFT + " .. key, hl.dsp.window.move({ direction = direction }))
+      end
+
+      -- Workspaces
+      for workspace = 1, 9 do
+        local name = tostring(workspace)
+        hl.bind("SUPER + " .. name, hl.dsp.focus({ workspace = name }))
+        hl.bind("SUPER + SHIFT + " .. name, hl.dsp.window.move({
+          workspace = name,
+          follow = true,
+        }))
+      end
+
+      -- Mouse-drag move/resize
+      hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { mouse = true })
+      hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
+    '';
   };
 }
