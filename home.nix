@@ -540,6 +540,33 @@ in
 
   programs.mpv.enable = true;
 
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+      # New shared-mime-info uses the registered Matroska names; mpv's
+      # desktop file still advertises the older x- aliases.
+      "video/matroska" = [ "mpv.desktop" ];
+      "video/x-matroska" = [ "mpv.desktop" ];
+      "video/matroska-3d" = [ "mpv.desktop" ];
+      "video/x-matroska-3d" = [ "mpv.desktop" ];
+      "audio/matroska" = [ "mpv.desktop" ];
+      "audio/x-matroska" = [ "mpv.desktop" ];
+      "video/mp4" = [ "mpv.desktop" ];
+      "video/webm" = [ "mpv.desktop" ];
+      "video/quicktime" = [ "mpv.desktop" ];
+      "video/mpeg" = [ "mpv.desktop" ];
+      "video/x-msvideo" = [ "mpv.desktop" ];
+      "video/vnd.avi" = [ "mpv.desktop" ];
+      "x-scheme-handler/slack" = [ "slack.desktop" ];
+    };
+    associations.added = {
+      "video/matroska" = [ "mpv.desktop" ];
+      "video/matroska-3d" = [ "mpv.desktop" ];
+      "audio/matroska" = [ "mpv.desktop" ];
+      "x-scheme-handler/slack" = [ "slack.desktop" ];
+    };
+  };
+
   programs.nnn.enable = true;
 
   programs.ripgrep.enable = true;
