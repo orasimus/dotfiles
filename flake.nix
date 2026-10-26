@@ -3,6 +3,8 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # Temporary MCP-only pin: current nixpkgs has MCP 2, which breaks FastMCP.
+    nixpkgs-mcp.url = "github:NixOS/nixpkgs/fe13242281a67641c0102cdb1087f0ebe586c7df";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -29,7 +31,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, impermanence, sops-nix, disko, lanzaboote }: {
+  outputs = { self, nixpkgs, nixpkgs-mcp, home-manager, impermanence, sops-nix, disko, lanzaboote }: {
     nixosConfigurations.markeeg = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
@@ -44,6 +46,15 @@
         # `nix shell nixpkgs#foo` resolve against the locked revision instead
         # of whatever the default registry points at (typically stale).
         { nix.registry.nixpkgs.flake = nixpkgs; }
+        {
+          # Share the compatible MCP package between system and Home Manager.
+          # Remove this overlay and the pin once FastMCP supports nixpkgs' MCP.
+          nixpkgs.overlays = [
+            (final: prev: {
+              mcp-nixos = nixpkgs-mcp.legacyPackages.${prev.stdenv.hostPlatform.system}.mcp-nixos;
+            })
+          ];
+        }
         home-manager.nixosModules.home-manager
         ({ pkgs, ... }: {
           home-manager.useGlobalPkgs = true;

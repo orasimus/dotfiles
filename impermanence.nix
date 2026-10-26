@@ -27,11 +27,6 @@
 { lib, ... }:
 
 {
-  # systemd in initrd — the rollback service below is a systemd unit ordered
-  # before sysroot.mount. Without this we'd be stuck with the older
-  # boot.initrd.postDeviceCommands hook.
-  boot.initrd.systemd.enable = true;
-
   # Roll @root back to an empty snapshot before stage-2 mounts it as /.
   # The previous @root is preserved under /old_roots/<timestamp> on the parent
   # subvolume for ~30 days — escape hatch if a reboot wipes something we
